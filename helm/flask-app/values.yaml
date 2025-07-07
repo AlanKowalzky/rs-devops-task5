@@ -1,0 +1,6 @@
+image:
+  repository: twoj-dockerhub/flask-app
+  tag: latest
+service:
+  type: NodePort
+  port: 8080 

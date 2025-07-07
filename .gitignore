@@ -12,4 +12,4 @@ terraform.tfstate.backup
 *.pem
 req_*
 install*
-*.md
+# *.md (README.md)
