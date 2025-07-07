@@ -1,0 +1,15 @@
+diagrams/
+.terraform/
+*.tfstate
+*.tfstate.d/
+.terraform.lock.hcl
+.terraform/
+.cursorignore
+terraform.tfstate.backup
+*.tfvars
+*.tfvars.json
+.ssh/
+*.pem
+req_*
+install*
+*.md
