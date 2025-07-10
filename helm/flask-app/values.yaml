@@ -1,5 +1,5 @@
 image:
-  repository: twoj-dockerhub/flask-app
+  repository: twoj-dockerhub/flask_app
   tag: latest
 service:
   type: NodePort

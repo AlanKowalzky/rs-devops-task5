@@ -1,82 +1,90 @@
-# Prosta aplikacja Flask – wdrożenie na Kubernetes z Helm
+# Simple Flask Application – Deployment on Kubernetes with Helm
 
-## 1. Budowa obrazu Docker
+## 1. Build Docker Image
 
-Najpierw musisz zbudować obraz Dockera z aplikacją. W terminalu, w katalogu głównym projektu, wpisz:
+First, you need to build a Docker image with the application. In the main project directory, run:
 
 ```
-docker build -t twoj-dockerhub/flask-app:latest .
+docker build -t your-dockerhub/flask_app:latest .
 ```
-Zamień `twoj-dockerhub` na swoją nazwę użytkownika z DockerHub.
+Replace `your-dockerhub` with your DockerHub username.
 
-## 2. Wysłanie obrazu do DockerHub
+## 2. Push the Image to DockerHub
 
-Zaloguj się do DockerHub (jeśli jeszcze nie jesteś zalogowany):
+Log in to DockerHub (if you are not logged in yet):
 
 ```
 docker login
 ```
 
-Wyślij obraz do swojego repozytorium:
+Push the image to your repository:
 
 ```
-docker push twoj-dockerhub/flask-app:latest
+docker push your-dockerhub/flask_app:latest
 ```
 
-## 3. Instalacja Helm (jeśli nie masz)
+## 3. Install Helm (if you don't have it)
 
-Instrukcja: https://helm.sh/docs/intro/install/
+Instructions: https://helm.sh/docs/intro/install/
 
-## 4. Wdrożenie aplikacji na Kubernetes
+## 4. Deploy the Application on Kubernetes
 
-Przejdź do katalogu z chartem Helm:
+Go to the Helm chart directory:
 
 ```
 cd helm/flask-app
 ```
 
-Zainstaluj aplikację:
+Install the application:
 
 ```
 helm install flask-app .
 ```
 
-## 5. Sprawdzenie działania aplikacji
+## 5. Check if the Application Works
 
-Jeśli używasz Minikube, możesz łatwo otworzyć aplikację w przeglądarce:
+If you use Minikube, you can easily open the application in your browser:
 
 ```
 minikube service flask-app
 ```
 
-Jeśli używasz innego klastra, sprawdź, na jakim porcie NodePort działa aplikacja:
+If you use another cluster, check which NodePort the application is running on:
 
 ```
 kubectl get service flask-app
 ```
-Następnie otwórz w przeglądarce:  
-`http://adres_twojego_węzła:PORT`
+Then open in your browser:  
+`http://your_node_address:PORT`
 
-Powinieneś zobaczyć napis:  
+You should see the message:  
 `Hello from Flask app deployed with Helm!`
 
-## 6. Usunięcie aplikacji
+## 6. Remove the Application
 
-Aby usunąć wdrożenie:
+To remove the deployment:
 
 ```
 helm uninstall flask-app
 ```
 
+## Automatic Docker Image Build and Push (GitHub Actions)
+
+To make the workflow work, add two secrets in your repository settings:
+- DOCKERHUB_USERNAME – Your DockerHub username
+- DOCKERHUB_TOKEN – Access token (generate it on DockerHub)
+
+After each push to the main or task_5 branch, the image will be automatically built and pushed to DockerHub.
+
 ---
 
-**Wyjaśnienia:**
-- **Docker** pozwala spakować aplikację i jej zależności w jeden obraz, który można uruchomić wszędzie.
-- **Kubernetes** to system do zarządzania aplikacjami w kontenerach (np. Docker).
-- **Helm** to narzędzie do łatwego wdrażania aplikacji na Kubernetesie.
-- **NodePort** to sposób na udostępnienie aplikacji na zewnątrz klastra.
+**Explanations:**
+- **Docker** allows you to package the application and its dependencies into a single image that can run anywhere.
+- **Kubernetes** is a system for managing applications in containers (e.g., Docker).
+- **Helm** is a tool for easy application deployment on Kubernetes.
+- **NodePort** is a way to expose the application outside the cluster.
 
 ---
 
-**Podsumowanie:**  
-Dzięki tym plikom i instrukcji możesz zbudować, opublikować i wdrożyć prostą aplikację webową na swoim klastrze Kubernetes, nawet jeśli robisz to pierwszy raz! 
+**Summary:**  
+With these files and instructions, you can build, publish, and deploy a simple web application on your Kubernetes cluster, even if it's your first time! 
