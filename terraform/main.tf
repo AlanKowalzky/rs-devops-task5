@@ -59,9 +59,4 @@ data "aws_ami" "amazon_linux" {
     name   = "name"
     values = ["amzn2-ami-hvm-*-x86_64-gp2"]
   }
-}
-
-output "public_ip" {
-  value = aws_instance.k3s.public_ip
-  description = "Publiczny adres IP instancji EC2 z K3s"
 } 
