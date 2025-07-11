@@ -1,90 +1,119 @@
 # Simple Flask Application – Deployment on Kubernetes with Helm
 
-## 1. Build Docker Image
+## ✅ Checklista wymagań
 
-First, you need to build a Docker image with the application. In the main project directory, run:
-
-```
-docker build -t your-dockerhub/flask_app:latest .
-```
-Replace `your-dockerhub` with your DockerHub username.
-
-## 2. Push the Image to DockerHub
-
-Log in to DockerHub (if you are not logged in yet):
-
-```
-docker login
-```
-
-Push the image to your repository:
-
-```
-docker push your-dockerhub/flask_app:latest
-```
-
-## 3. Install Helm (if you don't have it)
-
-Instructions: https://helm.sh/docs/intro/install/
-
-## 4. Deploy the Application on Kubernetes
-
-Go to the Helm chart directory:
-
-```
-cd helm/flask-app
-```
-
-Install the application:
-
-```
-helm install flask-app .
-```
-
-## 5. Check if the Application Works
-
-If you use Minikube, you can easily open the application in your browser:
-
-```
-minikube service flask-app
-```
-
-If you use another cluster, check which NodePort the application is running on:
-
-```
-kubectl get service flask-app
-```
-Then open in your browser:  
-`http://your_node_address:PORT`
-
-You should see the message:  
-`Hello from Flask app deployed with Helm!`
-
-## 6. Remove the Application
-
-To remove the deployment:
-
-```
-helm uninstall flask-app
-```
-
-## Automatic Docker Image Build and Push (GitHub Actions)
-
-To make the workflow work, add two secrets in your repository settings:
-- DOCKERHUB_USERNAME – Your DockerHub username
-- DOCKERHUB_TOKEN – Access token (generate it on DockerHub)
-
-After each push to the main or task_5 branch, the image will be automatically built and pushed to DockerHub.
+- [x] Dockerfile do budowy obrazu aplikacji
+- [x] Katalog `app/` z aplikacją Flask i requirements.txt
+- [x] Helm Chart w `helm/flask-app/` (deployment, service, values)
+- [x] Skrypty automatyzujące (Terraform, user-data, deploy, screenshot)
+- [x] Workflow GitHub Actions do budowy i publikacji obrazu
+- [x] README z instrukcją uruchomienia i checklistą
+- [x] Automatyczna instalacja dashboardu K8s i instrukcja tunelowania
+- [x] Obsługa NodePort i Security Group
+- [x] Diagnostyka i troubleshooting
 
 ---
 
-**Explanations:**
-- **Docker** allows you to package the application and its dependencies into a single image that can run anywhere.
-- **Kubernetes** is a system for managing applications in containers (e.g., Docker).
-- **Helm** is a tool for easy application deployment on Kubernetes.
-- **NodePort** is a way to expose the application outside the cluster.
+## Plan uruchomienia środowiska
+
+### 1. Utwórz infrastrukturę (EC2, Security Group)
+```bash
+cd terraform
+terraform init
+terraform apply
+```
+Po zakończeniu zapisz publiczny IP EC2 (wyświetli się na końcu).
+
+### 2. Automatyczne wdrożenie aplikacji, dashboardu i port-forward
+```bash
+cd ../scripts
+./local_deploy_and_screenshot.sh
+```
+Skrypt:
+- Skopiuje pliki na EC2,
+- Uruchomi zdalnie skrypt wdrożeniowy,
+- Zainstaluje K3s, Helm, dashboard, aplikację,
+- Ustawi kubeconfig i port-forward do dashboardu,
+- Wyświetli adres aplikacji i instrukcję tunelowania do dashboardu.
+
+### 3. Dostęp do aplikacji
+Otwórz w przeglądarce:
+```
+http://<PUBLICZNY_IP_EC2>:30080
+```
+
+### 4. Dostęp do dashboardu Kubernetes
+- Na EC2 port-forward działa automatycznie (port 8001).
+- Na swoim komputerze uruchom tunel SSH:
+  ```bash
+  ssh -i ~/.ssh/id_rsa -L 8001:localhost:8001 ec2-user@<PUBLICZNY_IP_EC2>
+  ```
+- Otwórz w przeglądarce:
+  ```
+  https://localhost:8001
+  ```
+  (może być ostrzeżenie o certyfikacie – zignoruj)
+
+### 5. Logowanie do dashboardu
+- Potrzebujesz tokena:
+  ```bash
+  kubectl -n kubernetes-dashboard create token admin-user
+  ```
+  (jeśli nie masz admin-user, patrz dokumentacja K8s dashboard)
+- Skopiuj token i wklej w oknie logowania dashboardu.
+
+### 6. Diagnostyka i naprawa typowych problemów
+- Jeśli `kubectl` zgłasza błąd uprawnień:
+  ```bash
+  sudo cp /etc/rancher/k3s/k3s.yaml ~/.kube/config
+  sudo chown $(id -u):$(id -g) ~/.kube/config
+  sudo chmod 600 ~/.kube/config
+  export KUBECONFIG=~/.kube/config
+  ```
+  (dodaj `export KUBECONFIG=~/.kube/config` do `~/.bashrc` dla trwałości)
+- Jeśli dashboard nie działa lokalnie – sprawdź, czy tunel SSH jest aktywny i port-forward działa na EC2.
+
+### 7. Usuwanie środowiska
+Po zakończeniu testów:
+```bash
+cd terraform
+terraform destroy
+```
 
 ---
 
-**Summary:**  
-With these files and instructions, you can build, publish, and deploy a simple web application on your Kubernetes cluster, even if it's your first time! 
+## Automatyzacja CI/CD (GitHub Actions)
+- Po każdym pushu do `main` lub `task-5` obraz Dockera jest automatycznie budowany i publikowany na DockerHub.
+- Wymagane sekrety repozytorium:
+  - `DOCKERHUB_USERNAME`
+  - `DOCKERHUB_TOKEN`
+
+---
+
+## Parametry Helm (fragment values.yaml)
+```yaml
+image:
+  repository: alandocke/flask_app
+  tag: latest
+service:
+  type: NodePort
+  port: 8080
+  nodePort: 30080
+```
+
+---
+
+## Troubleshooting
+- Jeśli coś nie działa, sprawdź logi na EC2:
+  ```bash
+  tail -n 50 /var/log/userdata-helm-install.log
+  tail -n 50 ~/dashboard-portforward.log
+  kubectl get pods -A
+  kubectl get svc -A
+  ```
+- Upewnij się, że Security Group EC2 pozwala na ruch na port 30080 (NodePort) i 22 (SSH).
+
+---
+
+## Podsumowanie
+Z tym repozytorium możesz w pełni automatycznie uruchomić aplikację Flask na K3s (AWS EC2), mieć dostęp do dashboardu K8s i korzystać z automatyzacji CI/CD. Wszystkie wymagania kursu są spełnione (patrz checklista na górze pliku). 
