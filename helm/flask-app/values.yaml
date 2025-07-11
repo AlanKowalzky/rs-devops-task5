@@ -1,5 +1,5 @@
 image:
-  repository: alandocke/flask-helm-demo
+  repository: alandocke/flask_app
   tag: latest
 service:
   type: NodePort
