@@ -82,5 +82,25 @@ fi
 echo "[user-data] Sprawdzanie statusu klastra..."
 kubectl get nodes || { echo "[user-data][BŁĄD] kubectl get nodes NIEUDANE"; exit 15; }
 
+# --- Wymuszenie poprawnych uprawnień kubeconfig dla ec2-user ---
+echo "[user-data] Wymuszam poprawne uprawnienia kubeconfig dla ec2-user..."
+sudo cp /etc/rancher/k3s/k3s.yaml /home/ec2-user/.kube/config
+sudo chown ec2-user:ec2-user /home/ec2-user/.kube/config
+sudo chmod 600 /home/ec2-user/.kube/config
+export KUBECONFIG=/home/ec2-user/.kube/config
+
+# --- Automatyczna instalacja dashboardu K8s ---
+echo "[user-data] Instaluję Kubernetes Dashboard..."
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.7.0/aio/deploy/recommended.yaml
+
+# --- Port-forward dashboardu na 8001 (w tle) ---
+echo "[user-data] Uruchamiam port-forward dashboardu na 8001 (w tle)..."
+nohup kubectl -n kubernetes-dashboard port-forward svc/kubernetes-dashboard 8001:443 > /home/ec2-user/dashboard-portforward.log 2>&1 &
+
+# --- Instrukcja tunelowania SSH do dashboardu ---
+echo "[user-data] Aby uzyskać dostęp do dashboardu na swoim komputerze, uruchom na swoim komputerze lokalnym:"
+echo "ssh -i ~/.ssh/id_rsa -L 8001:localhost:8001 ec2-user@<PUBLICZNY_IP_EC2>"
+echo "Następnie otwórz w przeglądarce: https://localhost:8001"
+
 echo "[user-data] Gotowe! K3s i Helm są zainstalowane. Możesz wdrażać aplikacje na Kubernetes."
 echo "Aby korzystać z kubectl bez sudo, użyj: export KUBECONFIG=/home/ec2-user/.kube/config" 

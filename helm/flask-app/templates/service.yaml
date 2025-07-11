@@ -7,5 +7,8 @@ spec:
   ports:
     - port: {{ .Values.service.port }}
       targetPort: 8080
+      {{- if eq .Values.service.type "NodePort" }}
+      nodePort: {{ .Values.service.nodePort }}
+      {{- end }}
   selector:
     app: {{ include "flask-app.name" . }} 
