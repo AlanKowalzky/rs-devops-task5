@@ -1,13 +1,13 @@
-# Terraform – EC2 z K3s i Helm (najtańszy klaster na AWS)
+# Terraform – EC2 with K3s and Helm (the cheapest cluster on AWS)
 
-## Jak uruchomić?
+## How to run?
 
-1. **Wymagania:**
-   - Zainstalowany [Terraform](https://learn.hashicorp.com/tutorials/terraform/install-cli)
-   - Skonfigurowane AWS CLI (`aws configure`)
-   - Klucz SSH w `~/.ssh/id_rsa.pub` (lub zmień ścieżkę w main.tf)
+1. **Requirements:**
+   - [Terraform](https://learn.hashicorp.com/tutorials/terraform/install-cli) installed
+   - AWS CLI configured (`aws configure`)
+   - SSH key in `~/.ssh/id_rsa.pub` (or change the path in main.tf)
 
-2. **Uruchomienie:**
+2. **Run:**
 
 ```bash
 cd terraform
@@ -15,20 +15,20 @@ terraform init
 terraform apply
 ```
 
-Po chwili zobaczysz publiczny adres IP instancji EC2 z gotowym K3s i Helm.
+After a while, you will see the public IP address of the EC2 instance with K3s and Helm ready.
 
-3. **Połącz się przez SSH:**
+3. **Connect via SSH:**
 
 ```bash
-ssh -i ~/.ssh/id_rsa ec2-user@PUBLICZNY_IP
+ssh -i ~/.ssh/id_rsa ec2-user@PUBLIC_IP
 ```
 
-4. **Usuń infrastrukturę po testach:**
+4. **Remove the infrastructure after testing:**
 
 ```bash
 terraform destroy
 ```
 
-**Uwaga:**
-- Po zakończeniu testów zawsze wykonaj `terraform destroy`, by nie ponosić kosztów!
-- Skrypt user-data automatycznie instaluje K3s i Helm na instancji EC2. 
+**Note:**
+- After testing, always run `terraform destroy` to avoid unnecessary costs!
+- The user-data script automatically installs K3s and Helm on the EC2 instance. 

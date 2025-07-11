@@ -1,80 +1,80 @@
 # Simple Flask Application – Deployment on Kubernetes with Helm
 
-## ✅ Checklista wymagań
+## ✅ Requirements Checklist
 
-- [x] Dockerfile do budowy obrazu aplikacji
-- [x] Katalog `app/` z aplikacją Flask i requirements.txt
-- [x] Helm Chart w `helm/flask-app/` (deployment, service, values)
-- [x] Skrypty automatyzujące (Terraform, user-data, deploy, screenshot)
-- [x] Workflow GitHub Actions do budowy i publikacji obrazu
-- [x] README z instrukcją uruchomienia i checklistą
-- [x] Automatyczna instalacja dashboardu K8s i instrukcja tunelowania
-- [x] Obsługa NodePort i Security Group
-- [x] Diagnostyka i troubleshooting
+- [x] Dockerfile for building the application image
+- [x] `app/` directory with Flask app and requirements.txt
+- [x] Helm Chart in `helm/flask-app/` (deployment, service, values)
+- [x] Automation scripts (Terraform, user-data, deploy, screenshot)
+- [x] GitHub Actions workflow for building and publishing the image
+- [x] README with launch instructions and checklist
+- [x] Automatic installation of K8s dashboard and tunneling instructions
+- [x] NodePort and Security Group configuration
+- [x] Diagnostics and troubleshooting
 
 ---
 
-## Plan uruchomienia środowiska
+## Environment Launch Plan
 
-### 1. Utwórz infrastrukturę (EC2, Security Group)
+### 1. Create infrastructure (EC2, Security Group)
 ```bash
 cd terraform
 terraform init
 terraform apply
 ```
-Po zakończeniu zapisz publiczny IP EC2 (wyświetli się na końcu).
+After completion, save the public EC2 IP (displayed at the end).
 
-### 2. Automatyczne wdrożenie aplikacji, dashboardu i port-forward
+### 2. Automatic deployment of the app, dashboard, and port-forward
 ```bash
 cd ../scripts
 ./local_deploy_and_screenshot.sh
 ```
-Skrypt:
-- Skopiuje pliki na EC2,
-- Uruchomi zdalnie skrypt wdrożeniowy,
-- Zainstaluje K3s, Helm, dashboard, aplikację,
-- Ustawi kubeconfig i port-forward do dashboardu,
-- Wyświetli adres aplikacji i instrukcję tunelowania do dashboardu.
+The script will:
+- Copy files to EC2,
+- Remotely run the deployment script,
+- Install K3s, Helm, dashboard, and the app,
+- Set up kubeconfig and port-forward to the dashboard,
+- Display the app address and dashboard tunneling instructions.
 
-### 3. Dostęp do aplikacji
-Otwórz w przeglądarce:
+### 3. Access the application
+Open in your browser:
 ```
-http://<PUBLICZNY_IP_EC2>:30080
+http://<PUBLIC_EC2_IP>:30080
 ```
 
-### 4. Dostęp do dashboardu Kubernetes
-- Na EC2 port-forward działa automatycznie (port 8001).
-- Na swoim komputerze uruchom tunel SSH:
+### 4. Access the Kubernetes dashboard
+- Port-forward runs automatically on EC2 (port 8001).
+- On your local computer, start an SSH tunnel:
   ```bash
-  ssh -i ~/.ssh/id_rsa -L 8001:localhost:8001 ec2-user@<PUBLICZNY_IP_EC2>
+  ssh -i ~/.ssh/id_rsa -L 8001:localhost:8001 ec2-user@<PUBLIC_EC2_IP>
   ```
-- Otwórz w przeglądarce:
+- Open in your browser:
   ```
   https://localhost:8001
   ```
-  (może być ostrzeżenie o certyfikacie – zignoruj)
+  (you may see a certificate warning – ignore it)
 
-### 5. Logowanie do dashboardu
-- Potrzebujesz tokena:
+### 5. Logging in to the dashboard
+- You need a token:
   ```bash
   kubectl -n kubernetes-dashboard create token admin-user
   ```
-  (jeśli nie masz admin-user, patrz dokumentacja K8s dashboard)
-- Skopiuj token i wklej w oknie logowania dashboardu.
+  (if you don't have admin-user, see the K8s dashboard documentation)
+- Copy the token and paste it into the dashboard login window.
 
-### 6. Diagnostyka i naprawa typowych problemów
-- Jeśli `kubectl` zgłasza błąd uprawnień:
+### 6. Diagnostics and troubleshooting
+- If `kubectl` reports a permissions error:
   ```bash
   sudo cp /etc/rancher/k3s/k3s.yaml ~/.kube/config
   sudo chown $(id -u):$(id -g) ~/.kube/config
   sudo chmod 600 ~/.kube/config
   export KUBECONFIG=~/.kube/config
   ```
-  (dodaj `export KUBECONFIG=~/.kube/config` do `~/.bashrc` dla trwałości)
-- Jeśli dashboard nie działa lokalnie – sprawdź, czy tunel SSH jest aktywny i port-forward działa na EC2.
+  (add `export KUBECONFIG=~/.kube/config` to your `~/.bashrc` for persistence)
+- If the dashboard is not available locally – check if the SSH tunnel is active and port-forward is running on EC2.
 
-### 7. Usuwanie środowiska
-Po zakończeniu testów:
+### 7. Destroying the environment
+After testing:
 ```bash
 cd terraform
 terraform destroy
@@ -82,15 +82,15 @@ terraform destroy
 
 ---
 
-## Automatyzacja CI/CD (GitHub Actions)
-- Po każdym pushu do `main` lub `task-5` obraz Dockera jest automatycznie budowany i publikowany na DockerHub.
-- Wymagane sekrety repozytorium:
+## CI/CD Automation (GitHub Actions)
+- On every push to `main` or `task-5`, the Docker image is automatically built and published to DockerHub.
+- Required repository secrets:
   - `DOCKERHUB_USERNAME`
   - `DOCKERHUB_TOKEN`
 
 ---
 
-## Parametry Helm (fragment values.yaml)
+## Helm Parameters (values.yaml excerpt)
 ```yaml
 image:
   repository: alandocke/flask_app
@@ -104,16 +104,16 @@ service:
 ---
 
 ## Troubleshooting
-- Jeśli coś nie działa, sprawdź logi na EC2:
+- If something doesn't work, check logs on EC2:
   ```bash
   tail -n 50 /var/log/userdata-helm-install.log
   tail -n 50 ~/dashboard-portforward.log
   kubectl get pods -A
   kubectl get svc -A
   ```
-- Upewnij się, że Security Group EC2 pozwala na ruch na port 30080 (NodePort) i 22 (SSH).
+- Make sure the EC2 Security Group allows traffic on port 30080 (NodePort) and 22 (SSH).
 
 ---
 
-## Podsumowanie
-Z tym repozytorium możesz w pełni automatycznie uruchomić aplikację Flask na K3s (AWS EC2), mieć dostęp do dashboardu K8s i korzystać z automatyzacji CI/CD. Wszystkie wymagania kursu są spełnione (patrz checklista na górze pliku). 
+## Summary
+With this repository, you can fully automatically launch a Flask app on K3s (AWS EC2), access the K8s dashboard, and use CI/CD automation. All course requirements are met (see the checklist at the top of the file). 
