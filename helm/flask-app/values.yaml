@@ -1,0 +1,8 @@
+image:
+  repository: alandocke/flask_app
+  tag: latest
+service:
+  type: NodePort
+  port: 8080
+  # NodePort musi być z zakresu 30000-32767!
+  nodePort: 30080 
