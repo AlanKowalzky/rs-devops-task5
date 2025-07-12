@@ -116,4 +116,45 @@ service:
 ---
 
 ## Podsumowanie
-Z tym repozytorium możesz w pełni automatycznie uruchomić aplikację Flask na K3s (AWS EC2), mieć dostęp do dashboardu K8s i korzystać z automatyzacji CI/CD. Wszystkie wymagania kursu są spełnione (patrz checklista na górze pliku). 
+Z tym repozytorium możesz w pełni automatycznie uruchomić aplikację Flask na K3s (AWS EC2), mieć dostęp do dashboardu K8s i korzystać z automatyzacji CI/CD. Wszystkie wymagania kursu są spełnione (patrz checklista na górze pliku).
+
+---
+
+## 📊 Konfiguracja portów
+
+### 🌐 Porty aplikacji i serwisów
+
+| Serwis | Port | Przeznaczenie | Dostęp |
+|--------|------|---------------|---------|
+| **Flask App (Container)** | 8080 | Aplikacja główna | Wewnętrzny |
+| **Flask App (Service)** | 8080 | Serwis Kubernetes | Wewnętrzny |
+| **Flask App (NodePort)** | 30080 | Dostęp zewnętrzny | `http://<EC2-IP>:30080` |
+| **K8s Dashboard** | 8001 | Panel administracyjny | `https://localhost:8001` (SSH tunnel) |
+| **SSH** | 22 | Połączenie SSH | `ssh ec2-user@<EC2-IP>` |
+
+### 🔧 Szczegóły konfiguracji
+
+#### Aplikacja Flask
+- **Port kontenera**: 8080 (zdefiniowany w Dockerfile i main.py)
+- **Port serwisu**: 8080 (zdefiniowany w service.yaml)
+- **NodePort**: 30080 (dla dostępu z zewnątrz)
+- **Konfiguracja**: `helm/flask-app/values.yaml`
+
+#### Kubernetes Dashboard
+- **Port kontenera**: 443 (HTTPS)
+- **Port-forward**: 8001 (skonfigurowany w userdata script)
+- **Tunel SSH**: `ssh -L 8001:localhost:8001 ec2-user@<EC2-IP>`
+
+### 🚀 Szybki dostęp
+
+```bash
+# Dostęp do aplikacji Flask
+curl http://<EC2-IP>:30080
+
+# Tunel do dashboardu K8s
+ssh -i ~/.ssh/id_rsa -L 8001:localhost:8001 ec2-user@<EC2-IP>
+
+# Sprawdzenie statusu portów
+kubectl get svc -A
+kubectl get pods -A
+``` 
