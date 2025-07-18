@@ -2,67 +2,44 @@ provider "aws" {
   region = var.aws_region
 }
 
-variable "aws_region" {
-  description = "AWS region to deploy resources in"
-  type        = string
-  default     = ""
-}
-
 resource "aws_key_pair" "deployer" {
-  key_name   = "deployer-key"
-  public_key = file("~/.ssh/id_rsa.pub")
+  key_name   = var.key_name
+  public_key = file(var.public_key_path)
 }
 
 resource "aws_security_group" "k3s_sg" {
-  name        = "k3s-sg"
-  description = "Allow SSH and NodePort"
+  name        = "k3s-sg-task6"
+  description = "Allow SSH, NodePort, HTTPS for Jenkins"
 
   ingress {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"] # Zmień na swoje IP dla bezpieczeństwa
+    cidr_blocks = ["0.0.0.0/0"]
   }
-
   ingress {
     from_port   = 8080
     to_port     = 8080
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
-
   ingress {
     from_port   = 30080
     to_port     = 30080
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
-
   ingress {
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
-
   egress {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
-  }
-}
-
-resource "aws_instance" "k3s" {
-  ami           = data.aws_ami.amazon_linux.id
-  instance_type = "t2.micro"
-  key_name      = aws_key_pair.deployer.key_name
-  vpc_security_group_ids = [aws_security_group.k3s_sg.id]
-
-  user_data = file("${path.module}/../scripts/ec2_userdata_k3s_helm.sh")
-
-  tags = {
-    Name = "k3s-ec2"
   }
 }
 
@@ -74,3 +51,16 @@ data "aws_ami" "amazon_linux" {
     values = ["amzn2-ami-hvm-*-x86_64-gp2"]
   }
 }
+
+resource "aws_instance" "k3s" {
+  ami           = data.aws_ami.amazon_linux.id
+  instance_type = var.instance_type
+  key_name      = aws_key_pair.deployer.key_name
+  vpc_security_group_ids = [aws_security_group.k3s_sg.id]
+
+  user_data = file("${path.module}/../../scripts/ec2_userdata_k3s_helm.sh")
+
+  tags = {
+    Name = "k3s-ec2-task6"
+  }
+} 
