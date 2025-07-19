@@ -90,4 +90,4 @@ pipeline {
 // - Ustaw parametry dla środowiska lokalnego lub AWS.
 // - Upewnij się, że Jenkins ma dostęp do registry, kubeconfig i SonarQube.
 // - Dla wersji lokalnej możesz uruchomić SonarQube i registry w Dockerze.
-// - Dla AWS podaj adres ECR, kubeconfig AWS, SonarQube (np. na EC2 lub publiczny). 
+// - Dla AWS podaj adres ECR, kubeconfig AWS, SonarQube (np. na EC2 lub publiczny).

@@ -102,5 +102,24 @@ echo "[user-data] Aby uzyskać dostęp do dashboardu na swoim komputerze, urucho
 echo "ssh -i ~/.ssh/id_rsa -L 8001:localhost:8001 ec2-user@<PUBLICZNY_IP_EC2>"
 echo "Następnie otwórz w przeglądarce: https://localhost:8001"
 
+# --- Automatyczna instalacja Jenkins (NodePort 30080, persistence off) ---
+echo "[user-data] Tworzę namespace jenkins (jeśli nie istnieje)..."
+kubectl create namespace jenkins || true
+
+echo "[user-data] Instaluję Jenkins przez Helm (NodePort 30080, persistence off)..."
+helm repo add jenkinsci https://charts.jenkins.io
+helm repo update
+helm install jenkins jenkinsci/jenkins \
+  --namespace jenkins \
+  --set controller.serviceType=NodePort \
+  --set controller.nodePort=30080 \
+  --set persistence.enabled=false
+
+# --- Port-forward Jenkins na 30080 (w tle) ---
+echo "[user-data] Uruchamiam port-forward Jenkins na 30080 (w tle)..."
+nohup kubectl -n jenkins port-forward svc/jenkins 30080:8080 > /home/ec2-user/jenkins-portforward.log 2>&1 &
+
+echo "[user-data] Jenkins będzie dostępny na http://<PUBLICZNY_IP_EC2>:30080"
+
 echo "[user-data] Gotowe! K3s i Helm są zainstalowane. Możesz wdrażać aplikacje na Kubernetes."
 echo "Aby korzystać z kubectl bez sudo, użyj: export KUBECONFIG=/home/ec2-user/.kube/config" 
