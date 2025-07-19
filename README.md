@@ -1,106 +1,106 @@
-# CI/CD Pipeline – Jenkins, SonarQube, Docker, Helm (Lokalnie i AWS)
+# CI/CD Pipeline – Jenkins, SonarQube, Docker, Helm (Local and AWS)
 
-## Spis treści
-1. [Wymagania](#1-wymagania)
-2. [Uruchomienie SonarQube i registry lokalnie (Docker)](#2-uruchomienie-sonarqube-i-registry-lokalnie-docker)
-3. [Konfiguracja credentiali w Jenkins](#3-konfiguracja-credentiali-w-jenkins)
-4. [Parametry pipeline (Jenkinsfile)](#4-parametry-pipeline-jenkinsfile)
-5. [Uruchamianie pipeline](#5-uruchamianie-pipeline)
+## Table of Contents
+1. [Requirements](#1-requirements)
+2. [Running SonarQube and Registry Locally (Docker)](#2-running-sonarqube-and-registry-locally-docker)
+3. [Jenkins Credentials Configuration](#3-jenkins-credentials-configuration)
+4. [Pipeline Parameters (Jenkinsfile)](#4-pipeline-parameters-jenkinsfile)
+5. [Running the Pipeline](#5-running-the-pipeline)
 6. [Troubleshooting](#6-troubleshooting)
-7. [Przykładowe uruchomienie pipeline (lokalnie)](#7-przykładowe-uruchomienie-pipeline-lokalnie)
-8. [Przykładowe uruchomienie pipeline (AWS)](#8-przykładowe-uruchomienie-pipeline-aws)
-9. [Pełny opis pipeline CI/CD (Jenkins, SonarQube, Docker, Helm)](#9-pelny-opis-pipeline-cicd-jenkins-sonarqube-docker-helm)
+7. [Sample Pipeline Run (Local)](#7-sample-pipeline-run-local)
+8. [Sample Pipeline Run (AWS)](#8-sample-pipeline-run-aws)
+9. [Full CI/CD Pipeline Description (Jenkins, SonarQube, Docker, Helm)](#9-full-cicd-pipeline-description-jenkins-sonarqube-docker-helm)
 
-## 1. Wymagania
-- Jenkins (na lokalnym K8s lub AWS)
+## 1. Requirements
+- Jenkins (on local K8s or AWS)
 - Docker
 - Helm
 - kubectl
-- (opcjonalnie) minikube/k3d/kind lub EC2/K3s/EKS
+- (optional) minikube/k3d/kind or EC2/K3s/EKS
 
-## 2. Uruchomienie SonarQube i registry lokalnie (Docker)
+## 2. Running SonarQube and Registry Locally (Docker)
 
 ```bash
 # SonarQube
-# Po uruchomieniu dostępny na http://localhost:9000 (login: admin, hasło: admin)
+# After starting, available at http://localhost:9000 (login: admin, password: admin)
 docker run -d --name sonarqube -p 9000:9000 sonarqube:community
 
-# Lokalny Docker registry
-# Dostępny na localhost:5000
+# Local Docker registry
+# Available at localhost:5000
 docker run -d -p 5000:5000 --name registry registry:2
 ```
 
-## 3. Konfiguracja credentiali w Jenkins
-- Dodaj token SonarQube jako Secret Text (np. SONAR_TOKEN)
-- Dodaj dane do registry (jeśli wymagane) jako Docker Registry Credentials
+## 3. Jenkins Credentials Configuration
+- Add SonarQube token as Secret Text (e.g. SONAR_TOKEN)
+- Add registry credentials (if required) as Docker Registry Credentials
 
-## 4. Parametry pipeline (Jenkinsfile)
-- DEPLOY_ENV: `local` lub `aws`
-- DOCKER_REGISTRY: `localhost:5000` (lokalnie) lub adres ECR (AWS)
+## 4. Pipeline Parameters (Jenkinsfile)
+- DEPLOY_ENV: `local` or `aws`
+- DOCKER_REGISTRY: `localhost:5000` (local) or ECR address (AWS)
 - IMAGE_NAME: `flask_app`
-- KUBECONFIG_PATH: ścieżka do kubeconfig (np. `/home/jenkins/.kube/config`)
-- SONAR_HOST_URL: `http://localhost:9000` (lokalnie) lub adres SonarQube (AWS)
-- SONAR_TOKEN: token SonarQube (z Jenkins Credentials)
+- KUBECONFIG_PATH: path to kubeconfig (e.g. `/home/jenkins/.kube/config`)
+- SONAR_HOST_URL: `http://localhost:9000` (local) or SonarQube address (AWS)
+- SONAR_TOKEN: SonarQube token (from Jenkins Credentials)
 
-## 5. Uruchamianie pipeline
-- Wybierz parametry odpowiednie dla środowiska (lokalnie lub AWS)
-- Uruchom pipeline w Jenkins
-- Sprawdź logi i status etapów (SonarQube, Docker build/push, Helm deploy, weryfikacja, powiadomienia)
+## 5. Running the Pipeline
+- Select parameters appropriate for your environment (local or AWS)
+- Run the pipeline in Jenkins
+- Check logs and stage statuses (SonarQube, Docker build/push, Helm deploy, verification, notifications)
 
 ## 6. Troubleshooting
-- Jeśli Docker push nie działa lokalnie: sprawdź, czy Docker registry działa (`docker ps`)
-- Jeśli SonarQube nie działa: sprawdź logi kontenera (`docker logs sonarqube`)
-- Jeśli Helm deploy nie działa: sprawdź kubeconfig i uprawnienia
-- Jeśli nie dochodzą powiadomienia: sprawdź konfigurację maila w Jenkins
+- If Docker push fails locally: check if Docker registry is running (`docker ps`)
+- If SonarQube is not working: check container logs (`docker logs sonarqube`)
+- If Helm deploy fails: check kubeconfig and permissions
+- If notifications do not arrive: check mail configuration in Jenkins
 
-## 7. Przykładowe uruchomienie pipeline (lokalnie)
+## 7. Sample Pipeline Run (Local)
 - DEPLOY_ENV: `local`
 - DOCKER_REGISTRY: `localhost:5000`
 - IMAGE_NAME: `flask_app`
 - KUBECONFIG_PATH: `/home/jenkins/.kube/config`
 - SONAR_HOST_URL: `http://localhost:9000`
-- SONAR_TOKEN: (z Jenkins Credentials)
+- SONAR_TOKEN: (from Jenkins Credentials)
 
-## 8. Przykładowe uruchomienie pipeline (AWS)
+## 8. Sample Pipeline Run (AWS)
 - DEPLOY_ENV: `aws`
-- DOCKER_REGISTRY: (adres ECR)
+- DOCKER_REGISTRY: (ECR address)
 - IMAGE_NAME: `flask_app`
-- KUBECONFIG_PATH: (ścieżka do kubeconfig AWS)
-- SONAR_HOST_URL: (adres SonarQube EC2/publiczny)
-- SONAR_TOKEN: (z Jenkins Credentials)
+- KUBECONFIG_PATH: (path to AWS kubeconfig)
+- SONAR_HOST_URL: (SonarQube EC2/public address)
+- SONAR_TOKEN: (from Jenkins Credentials)
 
-## 9. Pełny opis pipeline CI/CD (Jenkins, SonarQube, Docker, Helm)
+## 9. Full CI/CD Pipeline Description (Jenkins, SonarQube, Docker, Helm)
 
-Pipeline Jenkinsfile realizuje pełny proces CI/CD dla aplikacji Flask:
+The Jenkinsfile pipeline implements a complete CI/CD process for the Flask application:
 
-1. **Checkout kodu** – pobranie kodu z repozytorium.
-2. **Build aplikacji** – instalacja zależności Pythona.
-3. **Testy jednostkowe** – uruchomienie pytest.
-4. **SonarQube** – analiza jakości i bezpieczeństwa kodu.
-5. **Docker build** – budowa obrazu Dockera.
-6. **Docker push** – wysłanie obrazu do registry (lokalny lub ECR).
-7. **Helm deploy** – wdrożenie aplikacji na K8s (lokalnie lub AWS).
-8. **Weryfikacja aplikacji** – automatyczny test endpointu (curl).
-9. **Powiadomienia** – e-mail o sukcesie/porażce pipeline.
+1. **Checkout code** – fetch code from the repository.
+2. **Build application** – install Python dependencies.
+3. **Unit tests** – run pytest.
+4. **SonarQube** – code quality and security analysis.
+5. **Docker build** – build Docker image.
+6. **Docker push** – push image to registry (local or ECR).
+7. **Helm deploy** – deploy application to K8s (local or AWS).
+8. **Application verification** – automatic endpoint test (curl).
+9. **Notifications** – email on pipeline success/failure.
 
-### Parametryzacja środowiska
-- Pipeline obsługuje oba środowiska (lokalne i AWS) przez parametry:
-  - `DEPLOY_ENV` – wybór środowiska
-  - `DOCKER_REGISTRY` – adres registry
-  - `KUBECONFIG_PATH` – ścieżka do kubeconfig
-  - `SONAR_HOST_URL` – adres SonarQube
-  - `SONAR_TOKEN` – token SonarQube
+### Environment Parameterization
+- The pipeline supports both environments (local and AWS) via parameters:
+  - `DEPLOY_ENV` – environment selection
+  - `DOCKER_REGISTRY` – registry address
+  - `KUBECONFIG_PATH` – kubeconfig path
+  - `SONAR_HOST_URL` – SonarQube address
+  - `SONAR_TOKEN` – SonarQube token
 
-### Przykład działania pipeline:
-1. Developer pushuje kod do repozytorium.
-2. Pipeline uruchamia się automatycznie.
-3. Każdy etap jest logowany i weryfikowany.
-4. Po sukcesie – aplikacja jest wdrożona i przetestowana, a developer otrzymuje powiadomienie.
+### Example pipeline flow:
+1. Developer pushes code to the repository.
+2. Pipeline starts automatically.
+3. Each stage is logged and verified.
+4. On success – the application is deployed and tested, and the developer receives a notification.
 
-### Diagram procesu
+### Process diagram
 
-Zobacz folder `diagrams` – plik `pipeline_mermaid.md` z graficzną reprezentacją procesu.
+See the `diagrams` folder – file `pipeline_mermaid.md` for a graphical representation of the process.
 
 ---
 
-W razie problemów sprawdź logi Jenkins oraz logi kontenerów Docker/SonarQube/registry. 
+If you encounter problems, check Jenkins logs and the logs of Docker/SonarQube/registry containers. 

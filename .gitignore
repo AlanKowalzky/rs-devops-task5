@@ -17,3 +17,5 @@ install*
 *screenshot*
 *.txt
 *.mmd
+.venv/
+venv/
