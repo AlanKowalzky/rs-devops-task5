@@ -1,0 +1,15 @@
+controller:
+  serviceType: ClusterIP
+  adminUser: admin
+  adminPassword: admin
+  resources:
+    requests:
+      cpu: 100m
+      memory: 512Mi
+    limits:
+      cpu: 500m
+      memory: 1Gi
+  persistence:
+    enabled: true
+    size: 5Gi
+    storageClass: "" 

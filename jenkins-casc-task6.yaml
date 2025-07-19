@@ -1,0 +1,17 @@
+jobs:
+  - script: |
+      pipelineJob('task6-pipeline') {
+        definition {
+          cpsScm {
+            scm {
+              git {
+                remote {
+                  url('https://github.com/AlanKowalzky/rs-devops-task5.git')
+                }
+                branch('*/task-6')
+              }
+            }
+            scriptPath('Jenkinsfile')
+          }
+        }
+      } 

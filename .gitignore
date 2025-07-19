@@ -1,4 +1,4 @@
-diagrams/
+diagrams/*
 .terraform/
 *.tfstate
 *.tfstate.d/
@@ -12,4 +12,10 @@ terraform.tfstate.backup
 *.pem
 req_*
 install*
-*.md
+# *.md (README.md)
+*.pol
+*screenshot*
+*.txt
+*.mmd
+.venv/
+venv/
