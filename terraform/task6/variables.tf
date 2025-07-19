@@ -19,5 +19,5 @@ variable "public_key_path" {
 variable "instance_type" {
   description = "Typ instancji EC2"
   type        = string
-  default     = "t2.micro"
+  default     = "t2.small"
 } 

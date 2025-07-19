@@ -4,6 +4,6 @@ output "public_ip" {
 }
 
 output "jenkins_url" {
-  value = "https://${aws_instance.k3s.public_ip}:443"
-  description = "Publiczny adres URL Jenkins (HTTPS) na instancji EC2 z K3s (task6)"
+  value = "http://${aws_instance.k3s.public_ip}:30080"
+  description = "Publiczny adres URL Jenkins (NodePort 30080) na instancji EC2 z K3s (task6)"
 } 
