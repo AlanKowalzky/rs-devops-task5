@@ -139,3 +139,46 @@ if [ -f /home/ec2-user/jenkins-casc-task6.yaml ]; then
   chown -R 1000:1000 /var/jenkins_home/casc_configs/
   echo "[user-data] Skopiowano jenkins-casc-task6.yaml do /var/jenkins_home/casc_configs/"
 fi 
+
+# --- Instalacja i konfiguracja SonarQube ---
+echo "[user-data] Instalacja Docker i SonarQube..."
+
+# Instalacja Docker
+yum install -y docker && echo "[user-data] Instalacja Docker OK" || echo "[user-data][BŁĄD] Instalacja Docker NIEUDANA"
+systemctl start docker && echo "[user-data] Start Docker OK" || echo "[user-data][BŁĄD] Start Docker NIEUDANY"
+systemctl enable docker && echo "[user-data] Enable Docker OK" || echo "[user-data][BŁĄD] Enable Docker NIEUDANY"
+usermod -a -G docker ec2-user && echo "[user-data] Dodanie ec2-user do grupy docker OK" || echo "[user-data][BŁĄD] Dodanie do grupy docker NIEUDANE"
+
+# Uruchomienie SonarQube
+echo "[user-data] Uruchamiam SonarQube..."
+docker run -d --name sonarqube -p 9000:9000 sonarqube:community && echo "[user-data] Uruchomienie SonarQube OK" || echo "[user-data][BŁĄD] Uruchomienie SonarQube NIEUDANE"
+
+# Sprawdzenie statusu SonarQube
+echo "[user-data] Sprawdzanie statusu SonarQube..."
+sleep 30
+docker ps | grep sonarqube && echo "[user-data] Kontener SonarQube działa" || echo "[user-data][BŁĄD] Kontener SonarQube nie działa"
+
+# Sprawdzenie portu 9000
+echo "[user-data] Sprawdzanie portu 9000..."
+ss -tuln | grep 9000 && echo "[user-data] Port 9000 nasłuchuje" || echo "[user-data][BŁĄD] Port 9000 nie jest nasłuchiwany"
+
+# Czekanie na gotowość SonarQube (do 5 minut)
+echo "[user-data] Czekam na gotowość SonarQube (maksymalnie 5 minut)..."
+for i in {1..30}; do
+    if curl -s http://localhost:9000 > /dev/null 2>&1; then
+        echo "[user-data] SonarQube jest gotowy!"
+        break
+    fi
+    echo "[user-data] Czekam... ($i/30)"
+    sleep 10
+done
+
+# Finalna weryfikacja SonarQube
+echo "[user-data] Finalna weryfikacja SonarQube:"
+docker ps | grep sonarqube || echo "[user-data][BŁĄD] Kontener SonarQube nie działa"
+ss -tuln | grep 9000 || echo "[user-data][BŁĄD] Port 9000 nie nasłuchuje"
+curl -s http://localhost:9000 | head -5 && echo "[user-data] SonarQube odpowiada na HTTP" || echo "[user-data][BŁĄD] SonarQube nie odpowiada na HTTP"
+
+echo "[user-data] SonarQube będzie dostępny na http://<PUBLICZNY_IP_EC2>:9000"
+echo "[user-data] Login: admin, Hasło: admin (pierwszy raz zmień hasło)"
+echo "[user-data] Instalacja SonarQube zakończona!" 
