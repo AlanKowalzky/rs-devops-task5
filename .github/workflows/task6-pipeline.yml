@@ -27,14 +27,12 @@ jobs:
 
       - name: Install dependencies
         run: |
-          cd app
-          pip install -r requirements.txt
+          pip install -r app/requirements.txt
           pip install pytest
 
       - name: Run unit tests
         run: |
-          cd app
-          pytest
+          pytest app/tests/
 
       - name: SonarQube Scan
         uses: SonarSource/sonarcloud-github-action@v2
