@@ -67,14 +67,14 @@ else
   exit 12
 fi
 
-# Instalacja Helm
+# [2/4] Instalacja Helm
 export PATH=$PATH:/usr/local/bin
 
-echo "[user-data] Instalacja Helm..."
-curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash && echo "[user-data] Instalacja Helm OK" || { echo "[user-data][BŁĄD] Instalacja Helm NIEUDANA"; exit 13; }
+echo "[2/4] Instalacja Helm..."
+curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash && echo "[2/4] Instalacja Helm OK" || { echo "[BŁĄD] Instalacja Helm NIEUDANA"; exit 13; }
 
 if ! command -v helm &> /dev/null; then
-  echo "[user-data][BŁĄD] Helm nie jest dostępny w PATH!"
+  echo "[BŁĄD] Helm nie jest dostępny w PATH!"
   exit 14
 fi
 
@@ -163,5 +163,5 @@ curl -s http://localhost:9000 | head -5 || echo "[user-data][BŁĄD] SonarQube n
 echo "[user-data] SonarQube będzie dostępny na http://<PUBLICZNY_IP_EC2>:9000"
 echo "[user-data] Login: admin, Hasło: admin (pierwszy raz zmień hasło)"
 
-echo "[user-data] Gotowe! K3s, Helm, Jenkins i SonarQube są zainstalowane."
+echo "[KONIEC] Gotowe! K3s, Helm, Jenkins i SonarQube są zainstalowane."
 echo "Aby korzystać z kubectl bez sudo, użyj: export KUBECONFIG=/home/ec2-user/.kube/config" 
