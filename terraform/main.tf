@@ -62,11 +62,11 @@ resource "aws_security_group" "k3s_sg" {
 
 resource "aws_instance" "k3s" {
   ami           = data.aws_ami.amazon_linux.id
-  instance_type = "t2.micro"
+  instance_type = "t2.small"
   key_name      = aws_key_pair.deployer.key_name
   vpc_security_group_ids = [aws_security_group.k3s_sg.id]
 
-  user_data = file("${path.module}/../scripts/ec2_userdata_k3s_helm.sh")
+  user_data = file("${path.module}/../scripts/aws_ec2_small_task6_sonar.sh")
 
   tags = {
     Name = "k3s-ec2"

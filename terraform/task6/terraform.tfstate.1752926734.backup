@@ -36,7 +36,7 @@
                   "snapshot_id": "snap-096e8b3a4d976e5c2",
                   "throughput": "0",
                   "volume_initialization_rate": "0",
-                  "volume_size": "8",
+                  "volume_size": "16",
                   "volume_type": "gp2"
                 },
                 "no_device": "",
@@ -202,7 +202,7 @@
                 "tags_all": {},
                 "throughput": 0,
                 "volume_id": "vol-0fe0f619cc5cf8c65",
-                "volume_size": 8,
+                "volume_size": 16,
                 "volume_type": "gp2"
               }
             ],
