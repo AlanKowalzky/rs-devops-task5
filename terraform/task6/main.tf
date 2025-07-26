@@ -37,6 +37,14 @@ resource "aws_security_group" "k3s_sg" {
     cidr_blocks = ["0.0.0.0/0"] # Dostęp z dowolnego miejsca dla SonarQube
     description = "Allow SonarQube access"
   }
+  # NOWA REGUŁA: Zezwól na dostęp do API K3s (port 6443)
+  ingress {
+    description = "Allow K3s API access"
+    from_port   = 6443
+    to_port     = 6443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"] # Możesz ograniczyć do swojego IP dla większego bezpieczeństwa
+  }
 
   # Reguła dla ruchu wychodzącego (domyślnie zezwala na wszystko)
   egress {
