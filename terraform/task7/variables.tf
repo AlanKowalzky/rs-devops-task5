@@ -1,11 +1,38 @@
 # terraform/task7/variables.tf
 
 variable "k3s_kubeconfig_path" {
-  description = "Ścieżka do pliku kubeconfig klastra K3s (np. z terraform/task6)."
+  description = "Ścieżka do pliku kubeconfig K3s"
   type        = string
-  # Domyślna wartość, jeśli plik kubeconfig jest w standardowej lokalizacji
-  # lub jeśli wiesz, gdzie go umieścisz po wygenerowaniu przez task6.
-  # Zastąp to rzeczywistą ścieżką, jeśli jest inna.
-  # Użyj forward slashy '/' zamiast backslashy '\' dla ścieżek
-  default     = "C:/prog_AWS_DEVOPS/rs-devops-course-task4-5/terraform/task7/k3s_kubeconfig_task6.yaml"
+  default     = "./k3s_kubeconfig_task6.yaml"
+}
+
+variable "namespace" {
+  description = "Kubernetes namespace dla monitoringu"
+  type        = string
+  default     = "monitoring"
+}
+
+variable "prometheus_helm_release_name" {
+  description = "Nazwa release Helm dla Prometheus"
+  type        = string
+  default     = "my-prometheus"
+}
+
+variable "prometheus_service_type" {
+  description = "Typ serwisu Prometheus"
+  type        = string
+  default     = "ClusterIP"
+}
+
+variable "grafana_helm_release_name" {
+  description = "Nazwa release Helm dla Grafana"
+  type        = string
+  default     = "grafana"
+}
+
+variable "grafana_admin_password" {
+  description = "Hasło administratora Grafana"
+  type        = string
+  default     = "admin123"
+  sensitive   = true
 }

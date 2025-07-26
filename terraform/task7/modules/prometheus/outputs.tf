@@ -1,11 +1,19 @@
-# terraform/task7/modules/prometheus/outputs.tf
-
-output "prometheus_namespace" {
-  description = "The Kubernetes namespace where Prometheus is installed."
+output "prometheus_namespace_used" {
+  description = "Namespace używany przez Prometheus"
   value       = kubernetes_namespace.monitoring.metadata[0].name
 }
 
-output "prometheus_helm_release_name" {
-  description = "The Helm release name for Prometheus."
-  value       = helm_release.prometheus.name
+output "prometheus_deployment_name" {
+  description = "Nazwa deploymentu Prometheus"
+  value       = kubernetes_deployment.prometheus.metadata[0].name
+}
+
+output "prometheus_service_name" {
+  description = "Nazwa serwisu Prometheus"
+  value       = kubernetes_service.prometheus.metadata[0].name
+}
+
+output "prometheus_deployment_ready" {
+  description = "Status gotowości deploymentu"
+  value       = kubernetes_deployment.prometheus.spec[0].replicas
 }
