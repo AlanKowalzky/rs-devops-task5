@@ -1,106 +1,150 @@
-# CI/CD Pipeline – Jenkins, SonarQube, Docker, Helm (Local and AWS)
+# Task 7: Monitoring with Prometheus, Grafana, and Jenkins on Kubernetes
 
-## Table of Contents
-1. [Requirements](#1-requirements)
-2. [Running SonarQube and Registry Locally (Docker)](#2-running-sonarqube-and-registry-locally-docker)
-3. [Jenkins Credentials Configuration](#3-jenkins-credentials-configuration)
-4. [Pipeline Parameters (Jenkinsfile)](#4-pipeline-parameters-jenkinsfile)
-5. [Running the Pipeline](#5-running-the-pipeline)
-6. [Troubleshooting](#6-troubleshooting)
-7. [Sample Pipeline Run (Local)](#7-sample-pipeline-run-local)
-8. [Sample Pipeline Run (AWS)](#8-sample-pipeline-run-aws)
-9. [Full CI/CD Pipeline Description (Jenkins, SonarQube, Docker, Helm)](#9-full-cicd-pipeline-description-jenkins-sonarqube-docker-helm)
+This project sets up a monitoring stack on Kubernetes using Prometheus and Grafana, along with a Jenkins instance for CI/CD.
 
-## 1. Requirements
-- Jenkins (on local K8s or AWS)
-- Docker
-- Helm
-- kubectl
-- (optional) minikube/k3d/kind or EC2/K3s/EKS
+## Prerequisites
 
-## 2. Running SonarQube and Registry Locally (Docker)
+-   Terraform installed
+-   AWS CLI configured
+-   Kubernetes cluster (e.g., K3s)
+-   Helm
+
+## Deployment Steps
+
+1.  **Create Infrastructure:**
+
+    ```bash
+    cd terraform
+    terraform init
+    terraform apply
+    ```
+
+    This will create an EC2 instance and configure it with K3s and Helm. Make sure to save the public IP address of the EC2 instance.
+
+2.  **Access Services:**
+
+    Once the Terraform script is complete, you can access the services using the public IP address of the EC2 instance:
+
+    -   Jenkins: `http://<EC2_PUBLIC_IP>:30080`
+    -   Prometheus: `http://<EC2_PUBLIC_IP>:30090`
+    -   Grafana: `http://<EC2_PUBLIC_IP>:30300` (default admin password: admin123)
+
+3.  **Configure Grafana:**
+
+    -   Add Prometheus as a data source: `http://prometheus.monitoring.svc.cluster.local:9090`
+    -   Import Kubernetes dashboard
+    -   Set up alerts
+
+## Configuration
+
+### Terraform Variables
+
+-   `k3s_kubeconfig_path`: Path to the K3s kubeconfig file (default: `./k3s_kubeconfig_task6.yaml`)
+-   `namespace`: Kubernetes namespace for monitoring (default: `monitoring`)
+-   `prometheus_helm_release_name`: Helm release name for Prometheus (default: `my-prometheus`)
+-   `prometheus_service_type`: Prometheus service type (default: `ClusterIP`)
+-   `grafana_helm_release_name`: Helm release name for Grafana (default: `grafana`)
+-   `grafana_admin_password`: Grafana administrator password (default: `admin123`)
+
+### Outputs
+
+The Terraform script will output the following:
+
+-   `prometheus_namespace_used`: Namespace used by Prometheus
+-   `prometheus_deployment_name`: Prometheus deployment name
+-   `prometheus_service_name`: Prometheus service name
+-   `grafana_release_name`: Grafana release name
+-   `grafana_namespace`: Grafana namespace
+-   `grafana_admin_secret`: Grafana administrator secret
+-   `prometheus_url`: URL to access Prometheus
+-   `grafana_url`: URL to access Grafana
+
+## Modules
+
+-   **Prometheus Module:** Deploys Prometheus using Helm.
+-   **Grafana Module:** Deploys Grafana as a Kubernetes deployment and service and configures a Kubernetes ConfigMap for Grafana dashboards.
+
+## Security
+
+To ensure secure communication with the K3s cluster, it's crucial to configure TLS verification. This involves retrieving the CA certificate from the cluster and incorporating it into the Kubernetes provider configuration.
+
+## Next Steps
+
+1.  Open the necessary ports in the AWS Security Groups:
+    -   30080 (Jenkins)
+    -   30090 (Prometheus)
+    -   30300 (Grafana)
+2.  Access the services:
+    -   Jenkins: `http://<EC2_PUBLIC_IP>:30080`
+    -   Prometheus: `http://<EC2_PUBLIC_IP>:30090`
+    -   Grafana: `http://<EC2_PUBLIC_IP>:30300` (admin/admin123)
+3.  Configure Grafana:
+    -   Add Prometheus data source: `http://prometheus.monitoring.svc.cluster.local:9090`
+    -   Import dashboard for Kubernetes
+    -   Configure alerts
+
+## Troubleshooting
+
+-   **`Kubernetes cluster unreachable` error:**
+    -   Ensure that the K3s cluster is running and accessible.
+    -   Verify that the `KUBECONFIG` environment variable is correctly set.
+-   **`kubectl` not recognized:**
+    -   Make sure `kubectl` is installed and added to your system's PATH.
+-   **Connection issues:**
+    -   Check the AWS Security Groups to ensure that ports 30080, 30090, and 30300 are open.
+
+## K3s Cluster Health Check
+
+To ensure the K3s cluster is healthy and fully initialized, implement a health check script that verifies the availability of essential Kubernetes services.
+
+## Cleanup
+
+To remove the infrastructure:
 
 ```bash
-# SonarQube
-# After starting, available at http://localhost:9000 (login: admin, password: admin)
-docker run -d --name sonarqube -p 9000:9000 sonarqube:community
-
-# Local Docker registry
-# Available at localhost:5000
-docker run -d -p 5000:5000 --name registry registry:2
+cd terraform
+terraform destroy
 ```
 
-## 3. Jenkins Credentials Configuration
-- Add SonarQube token as Secret Text (e.g. SONAR_TOKEN)
-- Add registry credentials (if required) as Docker Registry Credentials
+## Additional Notes
 
-## 4. Pipeline Parameters (Jenkinsfile)
-- DEPLOY_ENV: `local` or `aws`
-- DOCKER_REGISTRY: `localhost:5000` (local) or ECR address (AWS)
-- IMAGE_NAME: `flask_app`
-- KUBECONFIG_PATH: path to kubeconfig (e.g. `/home/jenkins/.kube/config`)
-- SONAR_HOST_URL: `http://localhost:9000` (local) or SonarQube address (AWS)
-- SONAR_TOKEN: SonarQube token (from Jenkins Credentials)
+This setup provides a basic monitoring solution. Consider extending it with:
 
-## 5. Running the Pipeline
-- Select parameters appropriate for your environment (local or AWS)
-- Run the pipeline in Jenkins
-- Check logs and stage statuses (SonarQube, Docker build/push, Helm deploy, verification, notifications)
+-   Alerting rules in Prometheus
+-   Custom dashboards in Grafana
+-   Automated deployments with Jenkins
 
-## 6. Troubleshooting
-- If Docker push fails locally: check if Docker registry is running (`docker ps`)
-- If SonarQube is not working: check container logs (`docker logs sonarqube`)
-- If Helm deploy fails: check kubeconfig and permissions
-- If notifications do not arrive: check mail configuration in Jenkins
 
-## 7. Sample Pipeline Run (Local)
-- DEPLOY_ENV: `local`
-- DOCKER_REGISTRY: `localhost:5000`
-- IMAGE_NAME: `flask_app`
-- KUBECONFIG_PATH: `/home/jenkins/.kube/config`
-- SONAR_HOST_URL: `http://localhost:9000`
-- SONAR_TOKEN: (from Jenkins Credentials)
+## Infrastructure Automation
 
-## 8. Sample Pipeline Run (AWS)
-- DEPLOY_ENV: `aws`
-- DOCKER_REGISTRY: (ECR address)
-- IMAGE_NAME: `flask_app`
-- KUBECONFIG_PATH: (path to AWS kubeconfig)
-- SONAR_HOST_URL: (SonarQube EC2/public address)
-- SONAR_TOKEN: (from Jenkins Credentials)
+Utilize Terraform to automate the provisioning of the EC2 instance, security groups, and other necessary infrastructure components. This ensures a consistent and repeatable deployment process.
 
-## 9. Full CI/CD Pipeline Description (Jenkins, SonarQube, Docker, Helm)
 
-The Jenkinsfile pipeline implements a complete CI/CD process for the Flask application:
+## Repository Structure
 
-1. **Checkout code** – fetch code from the repository.
-2. **Build application** – install Python dependencies.
-3. **Unit tests** – run pytest.
-4. **SonarQube** – code quality and security analysis.
-5. **Docker build** – build Docker image.
-6. **Docker push** – push image to registry (local or ECR).
-7. **Helm deploy** – deploy application to K8s (local or AWS).
-8. **Application verification** – automatic endpoint test (curl).
-9. **Notifications** – email on pipeline success/failure.
+```
+├── app/                       # Flask application files
+├── helm/                      # Helm chart for deploying the application
+├── modules/
+│   ├── grafana/               # Grafana module
+│   └── prometheus/            # Prometheus module
+├── scripts/                   # Scripts for automation
+├── terraform/                 # Terraform configuration files
+├── Jenkinsfile                # Jenkins pipeline definition
+├── README.md                  # Documentation
+└── ...
+```
 
-### Environment Parameterization
-- The pipeline supports both environments (local and AWS) via parameters:
-  - `DEPLOY_ENV` – environment selection
-  - `DOCKER_REGISTRY` – registry address
-  - `KUBECONFIG_PATH` – kubeconfig path
-  - `SONAR_HOST_URL` – SonarQube address
-  - `SONAR_TOKEN` – SonarQube token
 
-### Example pipeline flow:
-1. Developer pushes code to the repository.
-2. Pipeline starts automatically.
-3. Each stage is logged and verified.
-4. On success – the application is deployed and tested, and the developer receives a notification.
+## Systemd Service Management
 
-### Process diagram
+Leverage `systemd` for managing the K3s service. Use `systemctl` commands to check the status, start, stop, and enable the K3s service.
 
-See the `diagrams` folder – file `pipeline_mermaid.md` for a graphical representation of the process.
+```bash
+sudo systemctl status k3s
+sudo systemctl start k3s
+sudo systemctl stop k3s
+sudo systemctl enable k3s
+```
 
----
-
-If you encounter problems, check Jenkins logs and the logs of Docker/SonarQube/registry containers. 
+These commands are essential for maintaining the K3s cluster's lifecycle.
