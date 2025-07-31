@@ -1,0 +1,11 @@
+--- /dev/null
++++ aws_ec2_small_task6_sonar.sh
+@@ -74,7 +74,7 @@
+ for i in {1..30}; do
+   percent=$((i*100/30))
+   bar=$(printf '%0.s#' $(seq 1 $((percent/5)) ))
+-  if kubectl cluster-info &>/dev/null; then
++  if kubectl --kubeconfig /home/ec2-user/.kube/config cluster-info &>/dev/null; then
+     echo "[user-data][READY][K3S][API]=OK po $((i*10))s [$percent%%] [$bar]"
+     break
+ 

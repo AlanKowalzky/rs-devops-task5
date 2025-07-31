@@ -1,0 +1,26 @@
+--- a/aws_ec2_small_task6_sonar.sh
++++ b/aws_ec2_small_task6_sonar.sh
+@@ -74,13 +74,15 @@
+ for i in {1..30}; do
+   percent=$((i*100/30))
+   bar=$(printf '%0.s#' $(seq 1 $((percent/5)) ))
+-  if kubectl --kubeconfig /home/ec2-user/.kube/config cluster-info &>/dev/null; then
+-     echo "[user-data][READY][K3S][API]=OK po $((i*10))s [$percent%%] [$bar]"
++  # Check API connectivity by grepping for a specific success message
++  if kubectl --kubeconfig /home/ec2-user/.kube/config cluster-info 2>/dev/null | grep -q "Kubernetes control plane is running"; then
++     echo "[user-data][READY][K3S][API]=OK po $((i*5))s [$percent%%] [$bar]"
+      break
+    fi
+-  echo -ne "[user-data][WAIT] K3s API niegotowe, czekam 10s... ($i/30) [$percent%%] [$bar]\r"
+-  sleep 10
++  echo -ne "[user-data][WAIT] K3s API niegotowe, czekam 5s... ($i/30) [$percent%%] [$bar]\r"
++  # Display last few K3s logs if API is not ready
++  sudo journalctl -u k3s --since "30s" --no-pager -n 5 || true # Show last 5 lines from last 30s
++  sleep 5
+    if [ $i -eq 30 ]; then
+      echo
+-    echo "[user-data][ERROR] K3s API nie wystartowało po 300s! Przerywam instalację."
++    echo "[user-data][ERROR] K3s API nie wystartowało po 150s! Przerywam instalację."
+      exit 21
+    fi
+  done
