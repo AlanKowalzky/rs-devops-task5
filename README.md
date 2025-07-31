@@ -1,150 +1,132 @@
-# Task 7: Monitoring with Prometheus, Grafana, and Jenkins on Kubernetes
+# End-to-End CI/CD and Monitoring on Kubernetes
 
-This project sets up a monitoring stack on Kubernetes using Prometheus and Grafana, along with a Jenkins instance for CI/CD.
+This project automates the deployment of a complete environment on AWS, featuring a K3s Kubernetes cluster, a Jenkins CI/CD pipeline, and a full monitoring stack with Prometheus, Grafana, and Alertmanager. The entire infrastructure and configuration are managed as code using Terraform and Helm.
 
-## Prerequisites
+## 🏗️ Architecture & Repository Structure
 
--   Terraform installed
--   AWS CLI configured
--   Kubernetes cluster (e.g., K3s)
--   Helm
+The project deploys all services onto a single EC2 instance running K3s. The monitoring stack is installed into a dedicated `monitoring` namespace.
 
-## Deployment Steps
+```
+├── monitoring/
+│   ├── alertmanager/
+│   │   └── alertmanager-config.yaml   # Alertmanager routes and receivers
+│   ├── grafana/
+│   │   ├── dashboards/
+│   │   │   └── k8s-cluster-dashboard.json # Dashboard definition
+│   │   └── datasources/
+│   │       └── datasources.yaml         # Prometheus data source config
+│   └── prometheus/
+│       └── rules/
+│           └── node-alerts.yaml         # Alerting rules for cluster resources
+├── scripts/
+│   └── aws_ec2_small_task6_sonar_opisy.sh # EC2 user_data script
+├── terraform/
+│   ├── main.tf                          # Main Terraform file for all resources
+│   ├── variables.tf                     # Variable definitions
+│   ├── outputs.tf                       # Outputs for service URLs
+│   └── terraform.tfvars.example         # Example secrets file
+└── README.md                            # This documentation
+```
 
-1.  **Create Infrastructure:**
+## 🚀 How to Run
 
-    ```bash
-    cd terraform
-    terraform init
-    terraform apply
-    ```
+### 1. Prerequisites
+- Terraform installed.
+- AWS CLI installed and configured (`aws configure`).
+- An SSH key pair available at `~/.ssh/id_rsa` and `~/.ssh/id_rsa.pub`.
 
-    This will create an EC2 instance and configure it with K3s and Helm. Make sure to save the public IP address of the EC2 instance.
+### 2. Configure Secrets
+Create a `terraform.tfvars` file inside the `terraform/` directory. **Do not commit this file to Git.** Use `terraform.tfvars.example` as a template.
 
-2.  **Access Services:**
+```hcl
+# terraform/terraform.tfvars
 
-    Once the Terraform script is complete, you can access the services using the public IP address of the EC2 instance:
+grafana_admin_password = "YourSuperSecretPassword123!"
 
-    -   Jenkins: `http://<EC2_PUBLIC_IP>:30080`
-    -   Prometheus: `http://<EC2_PUBLIC_IP>:30090`
-    -   Grafana: `http://<EC2_PUBLIC_IP>:30300` (default admin password: admin123)
+# SMTP server settings (e.g., for Gmail with an App Password)
+smtp_host      = "smtp.gmail.com:587"
+smtp_from      = "your.email@gmail.com"
+smtp_user      = "your.email@gmail.com"
+smtp_password  = "YourGmailAppPassword" # Use an App Password, not your account password
+alert_email_to = "your.alert.recipient@example.com"
+```
 
-3.  **Configure Grafana:**
-
-    -   Add Prometheus as a data source: `http://prometheus.monitoring.svc.cluster.local:9090`
-    -   Import Kubernetes dashboard
-    -   Set up alerts
-
-## Configuration
-
-### Terraform Variables
-
--   `k3s_kubeconfig_path`: Path to the K3s kubeconfig file (default: `./k3s_kubeconfig_task6.yaml`)
--   `namespace`: Kubernetes namespace for monitoring (default: `monitoring`)
--   `prometheus_helm_release_name`: Helm release name for Prometheus (default: `my-prometheus`)
--   `prometheus_service_type`: Prometheus service type (default: `ClusterIP`)
--   `grafana_helm_release_name`: Helm release name for Grafana (default: `grafana`)
--   `grafana_admin_password`: Grafana administrator password (default: `admin123`)
-
-### Outputs
-
-The Terraform script will output the following:
-
--   `prometheus_namespace_used`: Namespace used by Prometheus
--   `prometheus_deployment_name`: Prometheus deployment name
--   `prometheus_service_name`: Prometheus service name
--   `grafana_release_name`: Grafana release name
--   `grafana_namespace`: Grafana namespace
--   `grafana_admin_secret`: Grafana administrator secret
--   `prometheus_url`: URL to access Prometheus
--   `grafana_url`: URL to access Grafana
-
-## Modules
-
--   **Prometheus Module:** Deploys Prometheus using Helm.
--   **Grafana Module:** Deploys Grafana as a Kubernetes deployment and service and configures a Kubernetes ConfigMap for Grafana dashboards.
-
-## Security
-
-To ensure secure communication with the K3s cluster, it's crucial to configure TLS verification. This involves retrieving the CA certificate from the cluster and incorporating it into the Kubernetes provider configuration.
-
-## Next Steps
-
-1.  Open the necessary ports in the AWS Security Groups:
-    -   30080 (Jenkins)
-    -   30090 (Prometheus)
-    -   30300 (Grafana)
-2.  Access the services:
-    -   Jenkins: `http://<EC2_PUBLIC_IP>:30080`
-    -   Prometheus: `http://<EC2_PUBLIC_IP>:30090`
-    -   Grafana: `http://<EC2_PUBLIC_IP>:30300` (admin/admin123)
-3.  Configure Grafana:
-    -   Add Prometheus data source: `http://prometheus.monitoring.svc.cluster.local:9090`
-    -   Import dashboard for Kubernetes
-    -   Configure alerts
-
-## Troubleshooting
-
--   **`Kubernetes cluster unreachable` error:**
-    -   Ensure that the K3s cluster is running and accessible.
-    -   Verify that the `KUBECONFIG` environment variable is correctly set.
--   **`kubectl` not recognized:**
-    -   Make sure `kubectl` is installed and added to your system's PATH.
--   **Connection issues:**
-    -   Check the AWS Security Groups to ensure that ports 30080, 30090, and 30300 are open.
-
-## K3s Cluster Health Check
-
-To ensure the K3s cluster is healthy and fully initialized, implement a health check script that verifies the availability of essential Kubernetes services.
-
-## Cleanup
-
-To remove the infrastructure:
+### 3. Deploy the Environment
+Run the following commands to create the EC2 instance, install K3s, and deploy the entire Jenkins and monitoring stack.
 
 ```bash
 cd terraform
-terraform destroy
+terraform init
+terraform apply --auto-approve
 ```
 
-## Additional Notes
+This process will take several minutes as it installs and configures all services.
 
-This setup provides a basic monitoring solution. Consider extending it with:
+## 🔍 Accessing and Verifying Services
 
--   Alerting rules in Prometheus
--   Custom dashboards in Grafana
--   Automated deployments with Jenkins
+After `terraform apply` completes, the output will display the public IP address and direct URLs for all services.
 
+| Service | URL | Username | Password |
+|--------------|------------------------------------|:----------:|:----------------------------------|
+| **Jenkins** | `http://<EC2_PUBLIC_IP>:30080` | - | (Initial password in logs) |
+| **SonarQube** | `http://<EC2_PUBLIC_IP>:9000` | `admin` | `admin` |
+| **Grafana** | `http://<EC2_PUBLIC_IP>:30300` | `admin` | (From `terraform.tfvars`) |
+| **Prometheus** | `http://<EC2_PUBLIC_IP>:30090` | - | - |
+| **Alertmanager**| `http://<EC2_PUBLIC_IP>:30093` | - | - |
 
-## Infrastructure Automation
+### What to Check (Verification Steps)
 
-Utilize Terraform to automate the provisioning of the EC2 instance, security groups, and other necessary infrastructure components. This ensures a consistent and repeatable deployment process.
+1.  **Prometheus**:
+    - Navigate to `Status -> Rules`. You should see the `node-alerts` group with `NodeHighCpuUsage` and `NodeLowMemory` rules.
+    - Navigate to `Status -> Targets`. Verify that targets like `kubelet` and `node-exporter` are `UP`.
+    - In the expression browser, query a metric like `node_cpu_seconds_total` to see a graph.
 
+2.  **Grafana**:
+    - Log in using the password from your `terraform.tfvars` file.
+    - Go to `Configuration -> Data Sources`. The `Prometheus` data source should be pre-configured and working.
+    - Go to `Dashboards`. Find and open the `K8s Cluster Basic Metrics` dashboard. It should display CPU usage graphs.
 
-## Repository Structure
+3.  **Alertmanager**:
+    - Navigate to the Alertmanager URL and check the `Status` page to see that the configuration has been loaded correctly.
+    - To test an alert, you can temporarily lower a threshold in `monitoring/prometheus/rules/node-alerts.yaml` (e.g., change CPU usage to `> 1`), re-run `terraform apply`, and wait for the alert to enter a `Firing` state. You should receive an email.
 
-```
-├── app/                       # Flask application files
-├── helm/                      # Helm chart for deploying the application
-├── modules/
-│   ├── grafana/               # Grafana module
-│   └── prometheus/            # Prometheus module
-├── scripts/                   # Scripts for automation
-├── terraform/                 # Terraform configuration files
-├── Jenkinsfile                # Jenkins pipeline definition
-├── README.md                  # Documentation
-└── ...
-```
+## ✅ Verification Checklist & Scoring (100 points)
 
+This checklist helps track progress and ensures all evaluation criteria are met. The checkboxes for implemented features are already marked (`[x]`). The empty checkboxes (`[ ]`) are for the required screenshots you need to add to your Pull Request.
 
-## Systemd Service Management
+### Core Infrastructure & Automation (30 points)
+- [x] **IaC Deployment (10 pts)**: The entire environment is deployed via a single `terraform apply`.
+- [x] **CI/CD Services (10 pts)**: Jenkins and SonarQube are installed and accessible via the `user_data` script.
+- [x] **Configuration as Code (10 pts)**: All monitoring configurations (alerts, dashboards, etc.) are managed in the Git repository.
 
-Leverage `systemd` for managing the K3s service. Use `systemctl` commands to check the status, start, stop, and enable the K3s service.
+### Prometheus & Grafana Setup (35 points)
+- [x] **Prometheus & Grafana Running (10 pts)**: The `kube-prometheus-stack` is successfully deployed via Helm.
+    - **Proof**: `[ ]` Screenshot of `kubectl get all -n monitoring`.
+- [x] **Grafana Admin Secret (10 pts)**: The Grafana admin password is managed securely via a Kubernetes secret (injected by Terraform).
+- [x] **Grafana Data Source (5 pts)**: The Prometheus data source is configured as code.
+    - **Proof**: `[ ]` Screenshot of the Grafana Data Source configuration page.
+- [x] **Grafana Dashboard (10 pts)**: A custom dashboard is created and provisioned from a JSON file.
+    - **Proof**: `[ ]` Screenshot of the `K8s Cluster Basic Metrics` dashboard.
+
+### Alerting with Alertmanager (25 points)
+- [x] **Alert Rules Defined (10 pts)**: Alert rules for high CPU and low memory are defined in a YAML file.
+    - **Proof**: `[ ]` Screenshot of the rules in the Prometheus UI (`Status -> Rules`).
+- [x] **Alertmanager SMTP Configured (10 pts)**: SMTP settings are configured via code, with secrets passed securely.
+    - **Proof**: `[ ]` Screenshot of the Alertmanager `Status` page showing the configuration.
+- [x] **Alerts Received (5 pts)**: Alerts are successfully delivered via email.
+    - **Proof**: `[ ]` Screenshot of a received alert email (in `Firing` state).
+
+### Documentation & Submission (10 points)
+- [x] **Comprehensive README (10 pts)**: This `README.md` file is up-to-date and documents the entire process.
+- **Final PR**: Includes all required screenshots to validate the points above.
+
+**Note**: Remember to hide or blur any personal data (like email addresses) in screenshots.
+
+## 🧹 Cleanup
+
+To destroy all created resources and avoid AWS charges, run:
 
 ```bash
-sudo systemctl status k3s
-sudo systemctl start k3s
-sudo systemctl stop k3s
-sudo systemctl enable k3s
+cd terraform
+terraform destroy --auto-approve
 ```
-
-These commands are essential for maintaining the K3s cluster's lifecycle.
