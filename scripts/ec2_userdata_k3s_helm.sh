@@ -67,14 +67,14 @@ else
   exit 12
 fi
 
-# Instalacja Helm
+# [2/4] Instalacja Helm
 export PATH=$PATH:/usr/local/bin
 
-echo "[user-data] Instalacja Helm..."
-curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash && echo "[user-data] Instalacja Helm OK" || { echo "[user-data][BŁĄD] Instalacja Helm NIEUDANA"; exit 13; }
+echo "[2/4] Instalacja Helm..."
+curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash && echo "[2/4] Instalacja Helm OK" || { echo "[BŁĄD] Instalacja Helm NIEUDANA"; exit 13; }
 
 if ! command -v helm &> /dev/null; then
-  echo "[user-data][BŁĄD] Helm nie jest dostępny w PATH!"
+  echo "[BŁĄD] Helm nie jest dostępny w PATH!"
   exit 14
 fi
 
@@ -102,5 +102,66 @@ echo "[user-data] Aby uzyskać dostęp do dashboardu na swoim komputerze, urucho
 echo "ssh -i ~/.ssh/id_rsa -L 8001:localhost:8001 ec2-user@<PUBLICZNY_IP_EC2>"
 echo "Następnie otwórz w przeglądarce: https://localhost:8001"
 
-echo "[user-data] Gotowe! K3s i Helm są zainstalowane. Możesz wdrażać aplikacje na Kubernetes."
+# --- Automatyczna instalacja Jenkins (NodePort 30080, persistence off) ---
+echo "[user-data] Tworzę namespace jenkins (jeśli nie istnieje)..."
+kubectl create namespace jenkins || true
+
+echo "[user-data] Instaluję Jenkins przez Helm (NodePort 30080, persistence off)..."
+helm repo add jenkinsci https://charts.jenkins.io
+helm repo update
+helm install jenkins jenkinsci/jenkins \
+  --namespace jenkins \
+  --set controller.serviceType=NodePort \
+  --set controller.nodePort=30080 \
+  --set persistence.enabled=false
+
+# --- Port-forward Jenkins na 30080 (w tle) ---
+echo "[user-data] Uruchamiam port-forward Jenkins na 30080 (w tle)..."
+nohup kubectl -n jenkins port-forward svc/jenkins 30080:8080 > /home/ec2-user/jenkins-portforward.log 2>&1 &
+
+echo "[user-data] Jenkins będzie dostępny na http://<PUBLICZNY_IP_EC2>:30080"
+
+# --- Instalacja i konfiguracja SonarQube ---
+echo "[user-data] Instalacja Docker i SonarQube..."
+
+# Instalacja Docker
+yum install -y docker
+systemctl start docker
+systemctl enable docker
+usermod -a -G docker ec2-user
+
+# Uruchomienie SonarQube
+echo "[user-data] Uruchamiam SonarQube..."
+docker run -d --name sonarqube -p 9000:9000 sonarqube:community
+
+# Sprawdzenie statusu SonarQube
+echo "[user-data] Sprawdzanie statusu SonarQube..."
+sleep 30
+docker ps | grep sonarqube || echo "[user-data][BŁĄD] Kontener SonarQube nie działa"
+
+# Sprawdzenie portu 9000
+echo "[user-data] Sprawdzanie portu 9000..."
+ss -tuln | grep 9000 || echo "[user-data][BŁĄD] Port 9000 nie jest nasłuchiwany"
+
+# Czekanie na gotowość SonarQube (do 5 minut)
+echo "[user-data] Czekam na gotowość SonarQube (maksymalnie 5 minut)..."
+for i in {1..30}; do
+    if curl -s http://localhost:9000 > /dev/null 2>&1; then
+        echo "[user-data] SonarQube jest gotowy!"
+        break
+    fi
+    echo "[user-data] Czekam... ($i/30)"
+    sleep 10
+done
+
+# Finalna weryfikacja SonarQube
+echo "[user-data] Finalna weryfikacja SonarQube:"
+docker ps | grep sonarqube
+ss -tuln | grep 9000
+curl -s http://localhost:9000 | head -5 || echo "[user-data][BŁĄD] SonarQube nie odpowiada"
+
+echo "[user-data] SonarQube będzie dostępny na http://<PUBLICZNY_IP_EC2>:9000"
+echo "[user-data] Login: admin, Hasło: admin (pierwszy raz zmień hasło)"
+
+echo "[KONIEC] Gotowe! K3s, Helm, Jenkins i SonarQube są zainstalowane."
 echo "Aby korzystać z kubectl bez sudo, użyj: export KUBECONFIG=/home/ec2-user/.kube/config" 

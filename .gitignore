@@ -1,4 +1,4 @@
-diagrams/
+diagrams/*
 .terraform/
 *.tfstate
 *.tfstate.d/
@@ -15,3 +15,7 @@ install*
 # *.md (README.md)
 *.pol
 *screenshot*
+*.txt
+*.mmd
+.venv/
+venv/

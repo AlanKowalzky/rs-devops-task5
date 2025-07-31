@@ -1,119 +1,132 @@
-# Simple Flask Application – Deployment on Kubernetes with Helm
+# End-to-End CI/CD and Monitoring on Kubernetes
 
-## ✅ Requirements Checklist
+This project automates the deployment of a complete environment on AWS, featuring a K3s Kubernetes cluster, a Jenkins CI/CD pipeline, and a full monitoring stack with Prometheus, Grafana, and Alertmanager. The entire infrastructure and configuration are managed as code using Terraform and Helm.
 
-- [x] Dockerfile for building the application image
-- [x] `app/` directory with Flask app and requirements.txt
-- [x] Helm Chart in `helm/flask-app/` (deployment, service, values)
-- [x] Automation scripts (Terraform, user-data, deploy, screenshot)
-- [x] GitHub Actions workflow for building and publishing the image
-- [x] README with launch instructions and checklist
-- [x] Automatic installation of K8s dashboard and tunneling instructions
-- [x] NodePort and Security Group configuration
-- [x] Diagnostics and troubleshooting
+## 🏗️ Architecture & Repository Structure
 
----
+The project deploys all services onto a single EC2 instance running K3s. The monitoring stack is installed into a dedicated `monitoring` namespace.
 
-## Environment Launch Plan
+```
+├── monitoring/
+│   ├── alertmanager/
+│   │   └── alertmanager-config.yaml   # Alertmanager routes and receivers
+│   ├── grafana/
+│   │   ├── dashboards/
+│   │   │   └── k8s-cluster-dashboard.json # Dashboard definition
+│   │   └── datasources/
+│   │       └── datasources.yaml         # Prometheus data source config
+│   └── prometheus/
+│       └── rules/
+│           └── node-alerts.yaml         # Alerting rules for cluster resources
+├── scripts/
+│   └── aws_ec2_small_task6_sonar_opisy.sh # EC2 user_data script
+├── terraform/
+│   ├── main.tf                          # Main Terraform file for all resources
+│   ├── variables.tf                     # Variable definitions
+│   ├── outputs.tf                       # Outputs for service URLs
+│   └── terraform.tfvars.example         # Example secrets file
+└── README.md                            # This documentation
+```
 
-### 1. Create infrastructure (EC2, Security Group)
+## 🚀 How to Run
+
+### 1. Prerequisites
+- Terraform installed.
+- AWS CLI installed and configured (`aws configure`).
+- An SSH key pair available at `~/.ssh/id_rsa` and `~/.ssh/id_rsa.pub`.
+
+### 2. Configure Secrets
+Create a `terraform.tfvars` file inside the `terraform/` directory. **Do not commit this file to Git.** Use `terraform.tfvars.example` as a template.
+
+```hcl
+# terraform/terraform.tfvars
+
+grafana_admin_password = "YourSuperSecretPassword123!"
+
+# SMTP server settings (e.g., for Gmail with an App Password)
+smtp_host      = "smtp.gmail.com:587"
+smtp_from      = "your.email@gmail.com"
+smtp_user      = "your.email@gmail.com"
+smtp_password  = "YourGmailAppPassword" # Use an App Password, not your account password
+alert_email_to = "your.alert.recipient@example.com"
+```
+
+### 3. Deploy the Environment
+Run the following commands to create the EC2 instance, install K3s, and deploy the entire Jenkins and monitoring stack.
+
 ```bash
 cd terraform
 terraform init
-terraform apply
-```
-After completion, save the public EC2 IP (displayed at the end).
-
-### 2. Automatic deployment of the app, dashboard, and port-forward
-```bash
-cd ../scripts
-./local_deploy_and_screenshot.sh
-```
-The script will:
-- Copy files to EC2,
-- Remotely run the deployment script,
-- Install K3s, Helm, dashboard, and the app,
-- Set up kubeconfig and port-forward to the dashboard,
-- Display the app address and dashboard tunneling instructions.
-
-### 3. Access the application
-Open in your browser:
-```
-http://<PUBLIC_EC2_IP>:30080
+terraform apply --auto-approve
 ```
 
-### 4. Access the Kubernetes dashboard
-- Port-forward runs automatically on EC2 (port 8001).
-- On your local computer, start an SSH tunnel:
-  ```bash
-  ssh -i ~/.ssh/id_rsa -L 8001:localhost:8001 ec2-user@<PUBLIC_EC2_IP>
-  ```
-- Open in your browser:
-  ```
-  https://localhost:8001
-  ```
-  (you may see a certificate warning – ignore it)
+This process will take several minutes as it installs and configures all services.
 
-### 5. Logging in to the dashboard
-- You need a token:
-  ```bash
-  kubectl -n kubernetes-dashboard create token admin-user
-  ```
-  (if you don't have admin-user, see the K8s dashboard documentation)
-- Copy the token and paste it into the dashboard login window.
+## 🔍 Accessing and Verifying Services
 
-### 6. Diagnostics and troubleshooting
-- If `kubectl` reports a permissions error:
-  ```bash
-  sudo cp /etc/rancher/k3s/k3s.yaml ~/.kube/config
-  sudo chown $(id -u):$(id -g) ~/.kube/config
-  sudo chmod 600 ~/.kube/config
-  export KUBECONFIG=~/.kube/config
-  ```
-  (add `export KUBECONFIG=~/.kube/config` to your `~/.bashrc` for persistence)
-- If the dashboard is not available locally – check if the SSH tunnel is active and port-forward is running on EC2.
+After `terraform apply` completes, the output will display the public IP address and direct URLs for all services.
 
-### 7. Destroying the environment
-After testing:
+| Service | URL | Username | Password |
+|--------------|------------------------------------|:----------:|:----------------------------------|
+| **Jenkins** | `http://<EC2_PUBLIC_IP>:30080` | - | (Initial password in logs) |
+| **SonarQube** | `http://<EC2_PUBLIC_IP>:9000` | `admin` | `admin` |
+| **Grafana** | `http://<EC2_PUBLIC_IP>:30300` | `admin` | (From `terraform.tfvars`) |
+| **Prometheus** | `http://<EC2_PUBLIC_IP>:30090` | - | - |
+| **Alertmanager**| `http://<EC2_PUBLIC_IP>:30093` | - | - |
+
+### What to Check (Verification Steps)
+
+1.  **Prometheus**:
+    - Navigate to `Status -> Rules`. You should see the `node-alerts` group with `NodeHighCpuUsage` and `NodeLowMemory` rules.
+    - Navigate to `Status -> Targets`. Verify that targets like `kubelet` and `node-exporter` are `UP`.
+    - In the expression browser, query a metric like `node_cpu_seconds_total` to see a graph.
+
+2.  **Grafana**:
+    - Log in using the password from your `terraform.tfvars` file.
+    - Go to `Configuration -> Data Sources`. The `Prometheus` data source should be pre-configured and working.
+    - Go to `Dashboards`. Find and open the `K8s Cluster Basic Metrics` dashboard. It should display CPU usage graphs.
+
+3.  **Alertmanager**:
+    - Navigate to the Alertmanager URL and check the `Status` page to see that the configuration has been loaded correctly.
+    - To test an alert, you can temporarily lower a threshold in `monitoring/prometheus/rules/node-alerts.yaml` (e.g., change CPU usage to `> 1`), re-run `terraform apply`, and wait for the alert to enter a `Firing` state. You should receive an email.
+
+## ✅ Verification Checklist & Scoring (100 points)
+
+This checklist helps track progress and ensures all evaluation criteria are met. The checkboxes for implemented features are already marked (`[x]`). The empty checkboxes (`[ ]`) are for the required screenshots you need to add to your Pull Request.
+
+### Core Infrastructure & Automation (30 points)
+- [x] **IaC Deployment (10 pts)**: The entire environment is deployed via a single `terraform apply`.
+- [x] **CI/CD Services (10 pts)**: Jenkins and SonarQube are installed and accessible via the `user_data` script.
+- [x] **Configuration as Code (10 pts)**: All monitoring configurations (alerts, dashboards, etc.) are managed in the Git repository.
+
+### Prometheus & Grafana Setup (35 points)
+- [x] **Prometheus & Grafana Running (10 pts)**: The `kube-prometheus-stack` is successfully deployed via Helm.
+    - **Proof**: `[ ]` Screenshot of `kubectl get all -n monitoring`.
+- [x] **Grafana Admin Secret (10 pts)**: The Grafana admin password is managed securely via a Kubernetes secret (injected by Terraform).
+- [x] **Grafana Data Source (5 pts)**: The Prometheus data source is configured as code.
+    - **Proof**: `[ ]` Screenshot of the Grafana Data Source configuration page.
+- [x] **Grafana Dashboard (10 pts)**: A custom dashboard is created and provisioned from a JSON file.
+    - **Proof**: `[ ]` Screenshot of the `K8s Cluster Basic Metrics` dashboard.
+
+### Alerting with Alertmanager (25 points)
+- [x] **Alert Rules Defined (10 pts)**: Alert rules for high CPU and low memory are defined in a YAML file.
+    - **Proof**: `[ ]` Screenshot of the rules in the Prometheus UI (`Status -> Rules`).
+- [x] **Alertmanager SMTP Configured (10 pts)**: SMTP settings are configured via code, with secrets passed securely.
+    - **Proof**: `[ ]` Screenshot of the Alertmanager `Status` page showing the configuration.
+- [x] **Alerts Received (5 pts)**: Alerts are successfully delivered via email.
+    - **Proof**: `[ ]` Screenshot of a received alert email (in `Firing` state).
+
+### Documentation & Submission (10 points)
+- [x] **Comprehensive README (10 pts)**: This `README.md` file is up-to-date and documents the entire process.
+- **Final PR**: Includes all required screenshots to validate the points above.
+
+**Note**: Remember to hide or blur any personal data (like email addresses) in screenshots.
+
+## 🧹 Cleanup
+
+To destroy all created resources and avoid AWS charges, run:
+
 ```bash
 cd terraform
-terraform destroy
+terraform destroy --auto-approve
 ```
-
----
-
-## CI/CD Automation (GitHub Actions)
-- On every push to `main` or `task-5`, the Docker image is automatically built and published to DockerHub.
-- Required repository secrets:
-  - `DOCKERHUB_USERNAME`
-  - `DOCKERHUB_TOKEN`
-
----
-
-## Helm Parameters (values.yaml excerpt)
-```yaml
-image:
-  repository: alandocke/flask_app
-  tag: latest
-service:
-  type: NodePort
-  port: 8080
-  nodePort: 30080
-```
-
----
-
-## Troubleshooting
-- If something doesn't work, check logs on EC2:
-  ```bash
-  tail -n 50 /var/log/userdata-helm-install.log
-  tail -n 50 ~/dashboard-portforward.log
-  kubectl get pods -A
-  kubectl get svc -A
-  ```
-- Make sure the EC2 Security Group allows traffic on port 30080 (NodePort) and 22 (SSH).
-
----
-
-## Summary
-With this repository, you can fully automatically launch a Flask app on K3s (AWS EC2), access the K8s dashboard, and use CI/CD automation. All course requirements are met (see the checklist at the top of the file). 

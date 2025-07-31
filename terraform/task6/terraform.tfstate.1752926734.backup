@@ -1,0 +1,343 @@
+{
+  "version": 4,
+  "terraform_version": "1.12.1",
+  "serial": 10,
+  "lineage": "5b5a4229-5d0d-3b1a-abbd-4bf9012fc4fc",
+  "outputs": {
+    "jenkins_url": {
+      "value": "http://:30080",
+      "type": "string"
+    },
+    "public_ip": {
+      "value": "",
+      "type": "string"
+    }
+  },
+  "resources": [
+    {
+      "mode": "data",
+      "type": "aws_ami",
+      "name": "amazon_linux",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "allow_unsafe_filter": null,
+            "architecture": "x86_64",
+            "arn": "arn:aws:ec2:eu-central-1::image/ami-01fef3b730849ff89",
+            "block_device_mappings": [
+              {
+                "device_name": "/dev/xvda",
+                "ebs": {
+                  "delete_on_termination": "true",
+                  "encrypted": "false",
+                  "iops": "0",
+                  "snapshot_id": "snap-096e8b3a4d976e5c2",
+                  "throughput": "0",
+                  "volume_initialization_rate": "0",
+                  "volume_size": "16",
+                  "volume_type": "gp2"
+                },
+                "no_device": "",
+                "virtual_name": ""
+              }
+            ],
+            "boot_mode": "",
+            "creation_date": "2025-07-07T22:26:25.000Z",
+            "deprecation_time": "2025-10-05T22:26:00.000Z",
+            "description": "Amazon Linux 2 AMI 2.0.20250707.0 x86_64 HVM gp2",
+            "ena_support": true,
+            "executable_users": null,
+            "filter": [
+              {
+                "name": "name",
+                "values": [
+                  "amzn2-ami-hvm-*-x86_64-gp2"
+                ]
+              }
+            ],
+            "hypervisor": "xen",
+            "id": "ami-01fef3b730849ff89",
+            "image_id": "ami-01fef3b730849ff89",
+            "image_location": "amazon/amzn2-ami-hvm-2.0.20250707.0-x86_64-gp2",
+            "image_owner_alias": "amazon",
+            "image_type": "machine",
+            "imds_support": "",
+            "include_deprecated": false,
+            "kernel_id": "",
+            "last_launched_time": "",
+            "most_recent": true,
+            "name": "amzn2-ami-hvm-2.0.20250707.0-x86_64-gp2",
+            "name_regex": null,
+            "owner_id": "137112412989",
+            "owners": [
+              "amazon"
+            ],
+            "platform": "",
+            "platform_details": "Linux/UNIX",
+            "product_codes": [],
+            "public": true,
+            "ramdisk_id": "",
+            "region": "eu-central-1",
+            "root_device_name": "/dev/xvda",
+            "root_device_type": "ebs",
+            "root_snapshot_id": "snap-096e8b3a4d976e5c2",
+            "sriov_net_support": "simple",
+            "state": "available",
+            "state_reason": {
+              "code": "UNSET",
+              "message": "UNSET"
+            },
+            "tags": {},
+            "timeouts": null,
+            "tpm_support": "",
+            "uefi_data": null,
+            "usage_operation": "RunInstances",
+            "virtualization_type": "hvm"
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "aws_instance",
+      "name": "k3s",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 2,
+          "attributes": {
+            "ami": "ami-01fef3b730849ff89",
+            "arn": "arn:aws:ec2:eu-central-1:124355679154:instance/i-0717664064649e05f",
+            "associate_public_ip_address": false,
+            "availability_zone": "eu-central-1a",
+            "capacity_reservation_specification": [
+              {
+                "capacity_reservation_preference": "open",
+                "capacity_reservation_target": []
+              }
+            ],
+            "cpu_options": [
+              {
+                "amd_sev_snp": "",
+                "core_count": 1,
+                "threads_per_core": 1
+              }
+            ],
+            "credit_specification": [
+              {
+                "cpu_credits": "standard"
+              }
+            ],
+            "disable_api_stop": false,
+            "disable_api_termination": false,
+            "ebs_block_device": [],
+            "ebs_optimized": false,
+            "enable_primary_ipv6": null,
+            "enclave_options": [
+              {
+                "enabled": false
+              }
+            ],
+            "ephemeral_block_device": [],
+            "get_password_data": false,
+            "hibernation": false,
+            "host_id": "",
+            "host_resource_group_arn": null,
+            "iam_instance_profile": "",
+            "id": "i-0717664064649e05f",
+            "instance_initiated_shutdown_behavior": "stop",
+            "instance_lifecycle": "",
+            "instance_market_options": [],
+            "instance_state": "stopped",
+            "instance_type": "t2.small",
+            "ipv6_address_count": 0,
+            "ipv6_addresses": [],
+            "key_name": "deployer-key-task6",
+            "launch_template": [],
+            "maintenance_options": [
+              {
+                "auto_recovery": "default"
+              }
+            ],
+            "metadata_options": [
+              {
+                "http_endpoint": "enabled",
+                "http_protocol_ipv6": "disabled",
+                "http_put_response_hop_limit": 1,
+                "http_tokens": "optional",
+                "instance_metadata_tags": "disabled"
+              }
+            ],
+            "monitoring": false,
+            "network_interface": [],
+            "outpost_arn": "",
+            "password_data": "",
+            "placement_group": "",
+            "placement_partition_number": 0,
+            "primary_network_interface_id": "eni-0166b35b148799856",
+            "private_dns": "ip-172-31-27-255.eu-central-1.compute.internal",
+            "private_dns_name_options": [
+              {
+                "enable_resource_name_dns_a_record": false,
+                "enable_resource_name_dns_aaaa_record": false,
+                "hostname_type": "ip-name"
+              }
+            ],
+            "private_ip": "172.31.27.255",
+            "public_dns": "",
+            "public_ip": "",
+            "region": "eu-central-1",
+            "root_block_device": [
+              {
+                "delete_on_termination": true,
+                "device_name": "/dev/xvda",
+                "encrypted": false,
+                "iops": 100,
+                "kms_key_id": "",
+                "tags": {},
+                "tags_all": {},
+                "throughput": 0,
+                "volume_id": "vol-0fe0f619cc5cf8c65",
+                "volume_size": 16,
+                "volume_type": "gp2"
+              }
+            ],
+            "secondary_private_ips": [],
+            "security_groups": [
+              "k3s-sg-task6"
+            ],
+            "source_dest_check": true,
+            "spot_instance_request_id": "",
+            "subnet_id": "subnet-04455d37e36d131a9",
+            "tags": {
+              "Name": "k3s-ec2-task6"
+            },
+            "tags_all": {
+              "Name": "k3s-ec2-task6"
+            },
+            "tenancy": "default",
+            "timeouts": null,
+            "user_data": "#!/bin/bash\n# Skrypt user-data do automatycznej instalacji K3s, Helm i Jenkins na EC2 (Amazon Linux 2 lub Ubuntu) – wersja task6\nset -e\n\nLOGFILE=/var/log/userdata-jenkins-install.log\nexec \u003e \u003e(tee -a $LOGFILE) 2\u003e\u00261\n\necho \"[user-data] Start instalacji K3s, Helm i Jenkins: $(date)\"\n\n# Aktualizacja systemu\necho \"[user-data] Aktualizacja systemu...\"\nif [ -f /etc/os-release ]; then\n    . /etc/os-release\n    if [[ $ID == \"amzn\" ]]; then\n        yum update -y \u0026\u0026 echo \"[user-data] yum update OK\" || echo \"[user-data][BŁĄD] yum update NIEUDANY\"\n        yum install -y curl tar \u0026\u0026 echo \"[user-data] yum install curl tar OK\" || echo \"[user-data][BŁĄD] yum install curl tar NIEUDANY\"\n    elif [[ $ID == \"ubuntu\" ]]; then\n        apt-get update -y \u0026\u0026 echo \"[user-data] apt-get update OK\" || echo \"[user-data][BŁĄD] apt-get update NIEUDANY\"\n        apt-get install -y curl tar \u0026\u0026 echo \"[user-data] apt-get install curl tar OK\" || echo \"[user-data][BŁĄD] apt-get install curl tar NIEUDANY\"\n    fi\nfi\n\n# Instalacja K3s\nK3S_OK=0\nif systemctl is-active --quiet k3s \u0026\u0026 [ -f /etc/rancher/k3s/k3s.yaml ]; then\n  export KUBECONFIG=/etc/rancher/k3s/k3s.yaml\n  if kubectl get nodes 2\u003e/dev/null | grep -q ' Ready '; then\n    echo \"[user-data] K3s już działa i API odpowiada. Pomijam instalację.\"\n    K3S_OK=1\n  else\n    echo \"[user-data][BŁĄD] K3s działa, ale API nie odpowiada. Będzie reinstalacja.\"\n  fi\nelse\n  echo \"[user-data][BŁĄD] K3s nie działa lub brak kubeconfig. Będzie reinstalacja.\"\nfi\nif [ $K3S_OK -eq 0 ]; then\n  echo \"[user-data] K3s nie działa lub API nie odpowiada – czyszczę pozostałości i instaluję od nowa...\"\n  /usr/local/bin/k3s-uninstall.sh || true\n  rm -rf /etc/rancher /var/lib/rancher /var/lib/kubelet /etc/systemd/system/k3s*\n  curl -sfL https://get.k3s.io | INSTALL_K3S_SKIP_SELINUX_RPM=true sh - \u0026\u0026 echo \"[user-data] Instalacja K3s OK\" || { echo \"[user-data][BŁĄD] Instalacja K3s NIEUDANA\"; exit 10; }\n  sleep 5\n  export KUBECONFIG=/etc/rancher/k3s/k3s.yaml\n  if ! kubectl get nodes 2\u003e/dev/null | grep -q ' Ready '; then\n    echo \"[user-data][BŁĄD] K3s nadal nie działa po instalacji! Logi K3s:\"\n    journalctl -u k3s --no-pager | tail -30\n    exit 11\n  fi\nfi\n\n# Dodaj alias kubectl jeśli nie istnieje\nif ! command -v kubectl \u0026\u003e /dev/null; then\n    ln -s /usr/local/bin/kubectl /usr/bin/kubectl || true\nfi\n\n# Konfiguracja kubeconfig dla użytkownika\necho \"[user-data] Konfiguracja kubeconfig dla użytkownika...\"\nif [ -f /etc/rancher/k3s/k3s.yaml ]; then\n  mkdir -p /home/ec2-user/.kube\n  cp /etc/rancher/k3s/k3s.yaml /home/ec2-user/.kube/config\n  chown ec2-user:ec2-user /home/ec2-user/.kube/config\n  export KUBECONFIG=/home/ec2-user/.kube/config\n  echo \"[user-data] Kubeconfig OK\"\nelse\n  echo \"[user-data][BŁĄD] Plik /etc/rancher/k3s/k3s.yaml nie istnieje! K3s mógł nie zostać poprawnie zainstalowany.\"\n  exit 12\nfi\n\n# Instalacja Helm\nexport PATH=$PATH:/usr/local/bin\n\necho \"[user-data] Instalacja Helm...\"\ncurl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash \u0026\u0026 echo \"[user-data] Instalacja Helm OK\" || { echo \"[user-data][BŁĄD] Instalacja Helm NIEUDANA\"; exit 13; }\n\nif ! command -v helm \u0026\u003e /dev/null; then\n  echo \"[user-data][BŁĄD] Helm nie jest dostępny w PATH!\"\n  exit 14\nfi\n\n# Sprawdzanie statusu klastra\necho \"[user-data] Sprawdzanie statusu klastra...\"\nkubectl get nodes || { echo \"[user-data][BŁĄD] kubectl get nodes NIEUDANE\"; exit 15; }\n\n# --- Automatyczna instalacja Jenkins (NodePort 30080, persistence ON, minimalny rozmiar) ---\necho \"[user-data] Tworzę namespace jenkins (jeśli nie istnieje)...\"\nkubectl create namespace jenkins || true\n\necho \"[user-data] Instaluję Jenkins przez Helm (NodePort 30080, persistence ON)...\"\nhelm repo add jenkinsci https://charts.jenkins.io\nhelm repo update\nhelm install jenkins jenkinsci/jenkins \\\n  --namespace jenkins \\\n  --set controller.serviceType=NodePort \\\n  --set controller.nodePort=30080 \\\n  --set persistence.enabled=true \\\n  --set persistence.size=2Gi \\\n  --set persistence.storageClass=standard\n\n# --- Port-forward Jenkins na 30080 (w tle) ---\necho \"[user-data] Uruchamiam port-forward Jenkins na 30080 (w tle)...\"\nnohup kubectl -n jenkins port-forward svc/jenkins 30080:8080 \u003e /home/ec2-user/jenkins-portforward.log 2\u003e\u00261 \u0026\n\necho \"[user-data] Jenkins będzie dostępny na http://\u003cPUBLICZNY_IP_EC2\u003e:30080 (persistence 2Gi)\" ",
+            "user_data_base64": null,
+            "user_data_replace_on_change": false,
+            "volume_tags": null,
+            "vpc_security_group_ids": [
+              "sg-04c121e5bc7ac218d"
+            ]
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjo2MDAwMDAwMDAwMDAsImRlbGV0ZSI6MTIwMDAwMDAwMDAwMCwicmVhZCI6OTAwMDAwMDAwMDAwLCJ1cGRhdGUiOjYwMDAwMDAwMDAwMH0sInNjaGVtYV92ZXJzaW9uIjoiMiJ9",
+          "dependencies": [
+            "aws_key_pair.deployer",
+            "aws_security_group.k3s_sg",
+            "data.aws_ami.amazon_linux"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "aws_key_pair",
+      "name": "deployer",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 1,
+          "attributes": {
+            "arn": "arn:aws:ec2:eu-central-1:124355679154:key-pair/deployer-key-task6",
+            "fingerprint": "30:c8:13:c7:a9:b1:94:88:9a:a1:7a:7d:03:35:56:cf",
+            "id": "deployer-key-task6",
+            "key_name": "deployer-key-task6",
+            "key_name_prefix": "",
+            "key_pair_id": "key-007fc16f3d1881cf9",
+            "key_type": "rsa",
+            "public_key": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCnMupSKgm384+hSWFrVHIIHVmP3y4ISHtcgwltGhkX9oMuK9ZvGUUW0TeQOjL5/OfXVs5DAq0M7Fu9ECpoohdNhnoLL4b9MiFrWX61tqG9R+a74LdSxtdUVrXWdIqqfCQHDDpvCxK280Wb6Y6DtXeeqZX8JDJo7a1/dCB2JSfDTuqOgbbkk4J6W6hrbqpxK0rYLifj2vXMX6eoCjJRIl7L2OsfC8uPmjSoF02jFq9Y0KKf5Sn5EMOw2wUO8Xu7tcagiqp5HCMIvygK9FoFp6dUt0CN5unyX0KSpETjcejkL0NJREijAVLdaEndpoB+YTzJSjCrOUH8PoHtcNLQz9uSkHwrmjhB/kiWGj/LA/iyWIwbzwJlPiY0Cs2rD+haERgGlwsNyZDEvodfhKKVSPd75cKlDi4VhrGwS8tQ5TyC9uOVcqQNKdB2cf8zuEKHyXtWto3lry4JIr5rZfVf8TCSQpmHAnTqHxnMtUJLlcKYjS3bB95ZaeoaRsHqNyOBgIuuVKRCeD4gI/vu+R6BIi4yhOB1cvo1yDmgSlIb6zYW7vaoKNE2oJxTsQ+yQ08flRAsdKVLwxxM9TbimY5z9TSY114B+8N6EpA0RkTw5F69CYxoTNO6TcJsY7RdaY0z0fwqO9ClIgCNzUS/MZPi6QZLKxhFcEPerWSNSwoIJ4QjAw== alan.kowalzky@gmail.com",
+            "region": "eu-central-1",
+            "tags": {},
+            "tags_all": {}
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJzY2hlbWFfdmVyc2lvbiI6IjEifQ=="
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "aws_security_group",
+      "name": "k3s_sg",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 1,
+          "attributes": {
+            "arn": "arn:aws:ec2:eu-central-1:124355679154:security-group/sg-04c121e5bc7ac218d",
+            "description": "Allow SSH and NodePort for Jenkins",
+            "egress": [
+              {
+                "cidr_blocks": [
+                  "0.0.0.0/0"
+                ],
+                "description": "",
+                "from_port": 0,
+                "ipv6_cidr_blocks": [],
+                "prefix_list_ids": [],
+                "protocol": "-1",
+                "security_groups": [],
+                "self": false,
+                "to_port": 0
+              }
+            ],
+            "id": "sg-04c121e5bc7ac218d",
+            "ingress": [
+              {
+                "cidr_blocks": [
+                  "0.0.0.0/0"
+                ],
+                "description": "",
+                "from_port": 22,
+                "ipv6_cidr_blocks": [],
+                "prefix_list_ids": [],
+                "protocol": "tcp",
+                "security_groups": [],
+                "self": false,
+                "to_port": 22
+              },
+              {
+                "cidr_blocks": [
+                  "0.0.0.0/0"
+                ],
+                "description": "",
+                "from_port": 30080,
+                "ipv6_cidr_blocks": [],
+                "prefix_list_ids": [],
+                "protocol": "tcp",
+                "security_groups": [],
+                "self": false,
+                "to_port": 30080
+              }
+            ],
+            "name": "k3s-sg-task6",
+            "name_prefix": "",
+            "owner_id": "124355679154",
+            "region": "eu-central-1",
+            "revoke_rules_on_delete": false,
+            "tags": null,
+            "tags_all": {},
+            "timeouts": null,
+            "vpc_id": "vpc-0d96555dc05b5eb88"
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjo2MDAwMDAwMDAwMDAsImRlbGV0ZSI6OTAwMDAwMDAwMDAwfSwic2NoZW1hX3ZlcnNpb24iOiIxIn0="
+        }
+      ]
+    }
+  ],
+  "check_results": null
+}
